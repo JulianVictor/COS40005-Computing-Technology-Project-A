@@ -1,6 +1,6 @@
 {
-    "name": "cocoavision_app",
-    "short_name": "cocoavision_app",
+    "name": "dm_cocoa_app",
+    "short_name": "dm_cocoa_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
