@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-# cocoavision_app
+# my_first_app
 
 A new Flutter project.
 
@@ -15,7 +14,3 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
-=======
-# COS40005-Computing-Technology-Project-A
-Cocoa Pod Borer (CPB) Egg Identification with AI
->>>>>>> e1e1ece11912b4dae33cd4e0a6e22475fc9afc1c
