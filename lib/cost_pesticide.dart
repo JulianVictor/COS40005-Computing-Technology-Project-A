@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'labour_cost.dart';
+
 
 class CostPesticidePage extends StatefulWidget {
   const CostPesticidePage({super.key});
@@ -66,7 +68,11 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
-        title: const Text("Pesticide Cost Input",style: TextStyle(color: Colors.white),),
+        title: const Text(
+          "Pesticide Cost",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      ),
 
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -75,28 +81,31 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
+              // ✅ Date Selector (Figma Style)
               Center(
                 child: GestureDetector(
                   onTap: _pickDate,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       border: Border.all(color: purple),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(30),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.calendar_today, size: 18),
-                        const SizedBox(width: 8),
-                        Text(formatDate(selectedDate), style: const TextStyle(fontSize: 16)),
+                        const Icon(Icons.calendar_today, size: 18, color: Colors.black87),
+                        const SizedBox(width: 10),
+                        Text(formatDate(selectedDate),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                       ],
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
+
               _label("Brand of Pesticide"),
               _inputField(brandController),
 
@@ -110,26 +119,24 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
               _inputField(rateController, keyboard: TextInputType.number),
 
               _label("Pesticide Cost (RM)"),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  pesticideCost.toStringAsFixed(2),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
+              _readOnlyField(pesticideCost.toStringAsFixed(2)),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 32),
 
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _bottomButton("Previous", purple, () => Navigator.pop(context)),
-                  _bottomButton("Draft", Colors.grey.shade600, () {}),
-                  _bottomButton("Next", purple, () {}),
+                  Expanded(child: _bottomButton("Previous", purple, () => Navigator.pop(context))),
+                  const SizedBox(width: 10),
+                  Expanded(child: _bottomButton("Draft", Colors.grey.shade600, () {})),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _bottomButton("Next", purple, () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LabourCostPage()), // Fixed class name
+                      );
+                    }),
+                  ),
                 ],
               ),
             ],
@@ -140,9 +147,9 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
       bottomNavigationBar: Container(
         height: 60,
         color: purple,
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
+          children: [
             Icon(Icons.menu, color: Colors.white),
             Icon(Icons.home, color: Colors.white),
             Icon(Icons.person, color: Colors.white),
@@ -166,6 +173,21 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
       ),
     );
   }
+
+  Widget _readOnlyField(String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        value,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
 
   Widget _bottomButton(String text, Color color, VoidCallback onTap) {
     return SizedBox(

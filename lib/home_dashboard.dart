@@ -3,7 +3,7 @@ import 'record_history.dart';
 import 'monitoring_cpb_pest.dart';
 
 class HomeDashboard extends StatelessWidget {
-  HomeDashboard({super.key});
+  const HomeDashboard({super.key});
 
   final Color purple = const Color(0xFF2D108E);
 
@@ -45,7 +45,7 @@ class HomeDashboard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black12,
                     blurRadius: 6,
@@ -91,9 +91,9 @@ class HomeDashboard extends StatelessWidget {
       bottomNavigationBar: Container(
         height: 60,
         color: purple,
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
+          children: [
             Icon(Icons.menu, color: Colors.white),
             Icon(Icons.home, color: Colors.white),
             Icon(Icons.person, color: Colors.white),

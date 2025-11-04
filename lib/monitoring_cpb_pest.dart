@@ -5,7 +5,7 @@ import 'cost_pesticide.dart';
 class MonitoringCPBPest extends StatelessWidget {
   final Color purple = const Color(0xFF2D108E);
 
-  MonitoringCPBPest({super.key});
+  const MonitoringCPBPest({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -64,9 +64,9 @@ class MonitoringCPBPest extends StatelessWidget {
       bottomNavigationBar: Container(
         color: purple,
         height: 60,
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
+          children: [
             Icon(Icons.menu, color: Colors.white),
             Icon(Icons.home, color: Colors.white),
             Icon(Icons.person, color: Colors.white),
@@ -110,41 +110,6 @@ class MonitoringCPBPest extends StatelessWidget {
               onPressed: onDelete,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// TEMPORARY PAGE (We will style & build this next)
-class CostPesticidePage extends StatefulWidget {
-  const CostPesticidePage({super.key});
-
-  @override
-  State<CostPesticidePage> createState() => _CostPesticidePageState();
-}
-
-class _CostPesticidePageState extends State<CostPesticidePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2D108E),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        centerTitle: true,
-        title: const Text(
-          "Pesticide Cost Input",
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-      body: const Center(
-        child: Text(
-          "Cost Pesticide Page (Empty for now)",
-          style: TextStyle(fontSize: 16),
         ),
       ),
     );
