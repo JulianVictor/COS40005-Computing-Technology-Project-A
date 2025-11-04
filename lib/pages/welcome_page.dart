@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'registration_step1.dart';
+import 'login.dart'; // ADD THIS
+import 'user_verification.dart'; // ADD THIS
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -28,9 +30,9 @@ class WelcomePage extends StatelessWidget {
 
                 // Logo
                 Image.asset(
-                    'assets/images/dmcocoa.png',
-                    height: 300,
-                  ),
+                  'assets/images/dmcocoa.png',
+                  height: 300,
+                ),
 
                 const SizedBox(height: 40),
 
@@ -84,7 +86,7 @@ class WelcomePage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Create an account',
+                          'Create an account ',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -99,53 +101,51 @@ class WelcomePage extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
-                // Login section with improved styling
-               /* Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.grey.withOpacity(0.2),
-                    ),
-                  ),*/
-                 // child:
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Already have an account?',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
+                // Login section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Already have an account?',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
-                      const SizedBox(width: 4),
-                      GestureDetector(
-                        onTap: () {
-                          // Later: navigate to LoginPage put link here !!!
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2D108E).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'Log in',
-                            style: TextStyle(
-                              color: Color(0xFF2D108E),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () {
+                        // For now, always go to verification first
+                        // Later you can add the verified user check
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const UserVerification(
+                              isFirstTimeVerification: true,
                             ),
                           ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2D108E).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Log in',
+                          style: TextStyle(
+                            color: Color(0xFF2D108E),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-              //  ),
+                    ),
+                  ],
+                ),
 
                 const SizedBox(height: 20),
               ],
