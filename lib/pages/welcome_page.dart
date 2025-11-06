@@ -29,34 +29,38 @@ class WelcomePage extends StatelessWidget {
                 const Spacer(),
 
                 // Logo
-                Image.asset(
+         /*       Image.asset(
                   'assets/images/dmcocoa.png',
                   height: 300,
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 40),    */
 
                 // Welcome text
                 const Column(
                   children: [
+                    SizedBox(height: 20),
+                    Text(
+                      'A Farm management application for farmers in monitoring CPB pests on cocoa pods with AI-driven imaging tools',
+                      style: TextStyle(
+                      fontSize: 25,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w500,
+
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                    SizedBox(height: 8),
                     Text(
                       'Welcome!',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 50,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF2D108E),
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Your trusted mobile app in CPB monitoring',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+
                   ],
                 ),
 

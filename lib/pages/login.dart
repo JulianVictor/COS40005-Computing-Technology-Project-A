@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'reset_password.dart';
 
-// This defines a new class called LoginPage
 class LoginPage extends StatelessWidget {
-  // const means this widget won't change once created
   const LoginPage({super.key});
 
   @override
@@ -28,7 +27,7 @@ class LoginPage extends StatelessWidget {
               children: [
                 // Logo
                 Image.asset(
-                  'assets/images/dmcocoa.png',
+                  'assets/images/login.png',
                   height: 150,
                 ),
                 const SizedBox(height: 40),
@@ -47,7 +46,7 @@ class LoginPage extends StatelessWidget {
                 // Email Field
                 TextField(
                   decoration: InputDecoration(
-                    hintText: 'Email or Phone Number',
+                    hintText: 'Phone Number (e.g.: 0128888888)',
                     prefixIcon: const Icon(Icons.person_rounded, color: Color(0xFF2D108E)),
                     filled: true,
                     fillColor: const Color.fromRGBO(128, 128, 128, 0.05),
@@ -77,6 +76,29 @@ class LoginPage extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                // Forgot Password - ADD THIS SECTION
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ResetPasswordPage()),
+                      );
+                    },
+                    child: const Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        color: Color(0xFF2D108E),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 30),
 
                 // Login Button
