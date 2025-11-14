@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'registration_step1.dart';
-import 'login.dart'; // ADD THIS
-import 'user_verification.dart'; // ADD THIS
+import 'login.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -29,12 +28,11 @@ class WelcomePage extends StatelessWidget {
                 const Spacer(),
 
                 // Logo
-         /*       Image.asset(
+                /* Image.asset(
                   'assets/images/dmcocoa.png',
                   height: 300,
                 ),
-
-                const SizedBox(height: 40),    */
+                const SizedBox(height: 40), */
 
                 // Welcome text
                 const Column(
@@ -43,14 +41,12 @@ class WelcomePage extends StatelessWidget {
                     Text(
                       'A Farm management application for farmers in monitoring CPB pests on cocoa pods with AI-driven imaging tools',
                       style: TextStyle(
-                      fontSize: 25,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
-
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
+                        fontSize: 25,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                     SizedBox(height: 8),
                     Text(
                       'Welcome!',
@@ -60,7 +56,6 @@ class WelcomePage extends StatelessWidget {
                         color: Color(0xFF2D108E),
                       ),
                     ),
-
                   ],
                 ),
 
@@ -120,14 +115,11 @@ class WelcomePage extends StatelessWidget {
                     const SizedBox(width: 4),
                     GestureDetector(
                       onTap: () {
-                        // For now, always go to verification first
-                        // Later you can add the verified user check
+                        // Navigate directly to LoginPage
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const UserVerification(
-                              isFirstTimeVerification: true,
-                            ),
+                            builder: (context) => const LoginPage(),
                           ),
                         );
                       },

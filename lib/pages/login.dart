@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
 import 'reset_password.dart';
+import 'home.dart'; // ADD THIS IMPORT
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget { // CHANGED to StatefulWidget
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+
+  // Dummy credentials
+  final String _dummyPhone = '0174865555';
+  final String _dummyPassword = 'dmcocoa';
 
   @override
   Widget build(BuildContext context) {
@@ -23,8 +38,24 @@ class LoginPage extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // BACK BUTTON
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      color: const Color(0xFF2D108E),
+                    ),
+                  ],
+                ),
+
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                 // Logo
                 Image.asset(
                   'assets/images/login.png',
@@ -43,16 +74,26 @@ class LoginPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
 
-                // Email Field
+                // Phone Number Field
                 TextField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     hintText: 'Phone Number (e.g.: 0128888888)',
-                    prefixIcon: const Icon(Icons.person_rounded, color: Color(0xFF2D108E)),
+                    prefixIcon: const Icon(Icons.phone_rounded, color: Color(0xFF2D108E)),
                     filled: true,
                     fillColor: const Color.fromRGBO(128, 128, 128, 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF2D108E)),
                     ),
                   ),
                 ),
@@ -60,13 +101,21 @@ class LoginPage extends StatelessWidget {
 
                 // Password Field
                 TextField(
-                  obscureText: true,
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText: 'Password',
                     prefixIcon: const Icon(Icons.lock_rounded, color: Color(0xFF2D108E)),
                     suffixIcon: IconButton(
-                      icon: const Icon(Icons.visibility_off_rounded, color: Color(0xFF2D108E)),
-                      onPressed: () {},
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                        color: const Color(0xFF2D108E),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     ),
                     filled: true,
                     fillColor: const Color.fromRGBO(128, 128, 128, 0.05),
@@ -74,10 +123,18 @@ class LoginPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
                     ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF2D108E)),
+                    ),
                   ),
                 ),
 
-                // Forgot Password - ADD THIS SECTION
+                // Forgot Password
                 const SizedBox(height: 16),
                 Align(
                   alignment: Alignment.centerRight,
@@ -105,9 +162,7 @@ class LoginPage extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: Add login logic here
-                    },
+                    onPressed: _isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2D108E),
                       foregroundColor: Colors.white,
@@ -116,7 +171,16 @@ class LoginPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
+                    child: _isLoading
+                        ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                        : const Text(
                       'Login',
                       style: TextStyle(
                         fontSize: 16,
@@ -125,11 +189,112 @@ class LoginPage extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                // Demo Credentials Hint
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2D108E).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF2D108E).withOpacity(0.3),
+                    ),
+                  ),
+                  child: const Column(
+                    children: [
+                      Text(
+                        'Demo Credentials:',
+                        style: TextStyle(
+                          color: Color(0xFF2D108E),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Phone: 0174865555 | Password: dmcocoa',
+                        style: TextStyle(
+                          color: Color(0xFF2D108E),
+                          fontSize: 11,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
+        ],
         ),
       ),
+        ),
+    ));
+
+  }
+
+  void _handleLogin() {
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // Validation
+    if (phone.isEmpty || password.isEmpty) {
+      _showError('Please enter both phone number and password');
+      return;
+    }
+
+    // Remove any spaces or dashes from phone number
+    final cleanPhone = phone.replaceAll(RegExp(r'[-\s]'), '');
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Simulate API call delay
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Check credentials
+      if (cleanPhone == _dummyPhone && password == _dummyPassword) {
+        // Successful login - navigate to home page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      } else {
+        // Failed login
+        _showError('Invalid phone number or password. Please try again.');
+      }
+    });
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline_rounded, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 3),
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

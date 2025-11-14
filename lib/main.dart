@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/welcome_page.dart';
-import 'pages/registration_step1.dart';
+
 
 void main() {
   runApp(const DmCocoaApp());
