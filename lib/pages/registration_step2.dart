@@ -1,4 +1,4 @@
-import 'package:dmcocoa_app/pages/registration_step3.dart';
+import 'registration_step3.dart';
 import 'package:flutter/material.dart';
 
 

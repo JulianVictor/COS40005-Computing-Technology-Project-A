@@ -1,4 +1,4 @@
-import 'package:dmcocoa_app/pages/registration_step2.dart';
+import 'registration_step2.dart';
 import 'package:flutter/material.dart';
 
 class RegistrationStep1 extends StatefulWidget {
