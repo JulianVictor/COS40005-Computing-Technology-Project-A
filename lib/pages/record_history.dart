@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter/cupertino.dart';
+import 'table_monitoring_cpb.dart';
+import 'table_cocoa_yield.dart';
+import 'home_dashboard.dart';
 
 enum FilterMode { day, week, month, year, custom }
 
@@ -104,11 +107,34 @@ class _RecordHistoryPageState extends State<RecordHistory> {
                   backgroundColor: purple,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                onPressed: () {},
+                onPressed: () {    // <——— REPLACE THIS PART
+                  if (selectedTab == 0) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TableMonitoringCPB(
+                          startDate: startDate,
+                          endDate: endDate,
+                        ),
+                      ),
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TableCocoaYield(
+                          startDate: startDate,
+                          endDate: endDate,
+                        ),
+                      ),
+                    );
+                  }
+                },
                 child: const Text("Apply", style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
             ),
-          )
+          ),
+
         ]),
       ),
     );
