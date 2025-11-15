@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'add_farm.dart';
-import 'edit_farm.dart'; // ADD THIS IMPORT
+import 'edit_farm.dart';
+import 'profile.dart';
+import '/widgets/side_tab.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -36,11 +38,20 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      drawer: const SideTab(),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        leading: Builder( // WRAP WITH BUILDER
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded, color: Color(0xFF2D108E)),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
         automaticallyImplyLeading: false,
-        title: const Text(
+          title: const Text(
           'My Farms',
           style: TextStyle(
             fontSize: 24,
@@ -49,10 +60,14 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         actions: [
+          // Profile button
           IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF2D108E)),
+            icon: const Icon(Icons.person_rounded, color: Color(0xFF2D108E)),
             onPressed: () {
-              // TODO: Navigate to notifications page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
             },
           ),
         ],
@@ -317,26 +332,26 @@ class _HomePageState extends State<HomePage> {
 
   void _editFarm(int index) {
     Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => EditFarmPage(
-                farm: _farms[index],
-                farmIndex: index,
-                onFarmUpdated: (updatedFarm, index) {
-                  setState(() {
-                    _farms[index] = updatedFarm;
-                  });
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditFarmPage(
+          farm: _farms[index],
+          farmIndex: index,
+          onFarmUpdated: (updatedFarm, index) {
+            setState(() {
+              _farms[index] = updatedFarm;
+            });
 
-                  // Show success message
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${updatedFarm.name} updated successfully!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
-            ),
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${updatedFarm.name} updated successfully!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          },
         ),
+      ),
     );
   }
 
