@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'home_dashboard.dart';
+import 'package:flutter/cupertino.dart';
 
+enum FilterMode { day, week, month, year, custom }
 
 class RecordHistory extends StatefulWidget {
   const RecordHistory({super.key});
@@ -29,34 +30,6 @@ class _RecordHistoryPageState extends State<RecordHistory> {
 
   final DateFormat formatter = DateFormat("d MMMM yyyy");
 
-  Future<void> pickDate(bool isStart) async {
-    DateTime? date = await showDatePicker(
-      context: context,
-      initialDate: isStart ? startDate : endDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: purple, onPrimary: Colors.white),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (date != null) {
-      setState(() {
-        if (isStart) {
-          startDate = date;
-        } else {
-          endDate = date;
-        }
-        month = DateTime(date.year, date.month, 1);
-        selectedDay = date;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,9 +86,9 @@ class _RecordHistoryPageState extends State<RecordHistory> {
 
           const SizedBox(height: 20),
           Row(children: [
-            Expanded(child: _dateSelector(startDate, () => pickDate(true))),
+            Expanded(child: _dateSelector(startDate, true)),
             const SizedBox(width: 12),
-            Expanded(child: _dateSelector(endDate, () => pickDate(false))),
+            Expanded(child: _dateSelector(endDate, false)),
           ]),
 
           const SizedBox(height: 20),
@@ -188,9 +161,21 @@ class _RecordHistoryPageState extends State<RecordHistory> {
     );
   }
 
-  Widget _dateSelector(DateTime date, VoidCallback onTap) {
+  Widget _dateSelector(DateTime date, bool isStart) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        if (selectedFilter == "Day") {
+          pickDate(FilterMode.day, isStart: isStart);
+        } else if (selectedFilter == "Week") {
+          pickDate(FilterMode.day, isStart: isStart); // Week handled automatically
+        } else if (selectedFilter == "Month") {
+          pickDate(FilterMode.month, isStart: isStart);
+        } else if (selectedFilter == "Year") {
+          pickDate(FilterMode.year, isStart: isStart);
+        } else if (selectedFilter == "Custom") {
+          pickDate(FilterMode.day, isStart: isStart); // custom still picks date
+        }
+      },
       child: Container(
         height: 46,
         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -207,6 +192,7 @@ class _RecordHistoryPageState extends State<RecordHistory> {
     );
   }
 
+
   Widget _calendar() {
     return TableCalendar(
       firstDay: DateTime(2000),
@@ -218,36 +204,29 @@ class _RecordHistoryPageState extends State<RecordHistory> {
       calendarFormat: CalendarFormat.month,
 
       onDaySelected: (day, newFocus) {
+        if (selectedFilter == "Month" || selectedFilter == "Year") {
+          // Disable click for Month/Year mode
+          return;
+        }
+
         setState(() {
           focusedDay = newFocus;
 
           if (selectedFilter == "Day") {
-            // ✅ DAY MODE: Select only one date
             startDate = day;
             endDate = day;
             rangeStart = null;
             rangeEnd = null;
-            selectedDay = day;
-          } else if (selectedFilter == "Week") {
-            // ✅ WEEK MODE: Select entire week (Monday to Sunday)
+          }
+          else if (selectedFilter == "Week") {
             DateTime monday = day.subtract(Duration(days: day.weekday - 1));
             DateTime sunday = day.add(Duration(days: 7 - day.weekday));
-
             startDate = monday;
             endDate = sunday;
             rangeStart = monday;
             rangeEnd = sunday;
-          } else if (selectedFilter == "Month") {
-            // ✅ MONTH MODE: Select entire month
-            DateTime firstDayOfMonth = DateTime(day.year, day.month, 1);
-            DateTime lastDayOfMonth = DateTime(day.year, day.month + 1, 0);
-
-            startDate = firstDayOfMonth;
-            endDate = lastDayOfMonth;
-            rangeStart = firstDayOfMonth;
-            rangeEnd = lastDayOfMonth;
-          } else if (selectedFilter == "Custom") {
-            // ✅ CUSTOM MODE: range selection
+          }
+          else if (selectedFilter == "Custom") {
             if (rangeStart == null || (rangeStart != null && rangeEnd != null)) {
               rangeStart = day;
               rangeEnd = null;
@@ -255,57 +234,37 @@ class _RecordHistoryPageState extends State<RecordHistory> {
               endDate = day;
             } else {
               rangeEnd = day.isAfter(rangeStart!) ? day : rangeStart;
-
-              // ✅ UPDATE BOTH DATE COLUMNS when range is complete
               if (rangeStart != null && rangeEnd != null) {
                 startDate = rangeStart!;
                 endDate = rangeEnd!;
               }
             }
-          } else if (selectedFilter == "Week") {
-            // ✅ WEEK MODE: Select entire week (we'll implement this next)
-            startDate = day.subtract(Duration(days: day.weekday - 1));
-            endDate = day.add(Duration(days: 7 - day.weekday));
-            rangeStart = null;
-            rangeEnd = null;
-          } else if (selectedFilter == "Month") {
-            // ✅ MONTH MODE: Select entire month (we'll implement this next)
-            startDate = DateTime(day.year, day.month, 1);
-            endDate = DateTime(day.year, day.month + 1, 0);
-            rangeStart = null;
-            rangeEnd = null;
-          } else if (selectedFilter == "Year") {
-            // ✅ YEAR MODE: Select entire year (we'll implement this next)
-            startDate = DateTime(day.year, 1, 1);
-            endDate = DateTime(day.year, 12, 31);
-            rangeStart = null;
-            rangeEnd = null;
           }
         });
       },
 
+
       selectedDayPredicate: (day) {
+        if (selectedFilter == "Month" || selectedFilter == "Year") {
+          return false; // no highlight
+        }
+
         if (selectedFilter == "Day") {
           return isSameDay(startDate, day);
-        } else if (selectedFilter == "Week") {
-          // Highlight all days in the selected week
-          if (rangeStart != null && rangeEnd != null) {
-            return (day.isAfter(rangeStart!) || isSameDay(day, rangeStart)) &&
-                (day.isBefore(rangeEnd!) || isSameDay(day, rangeEnd));
-          }
-          return false;
-        } else if (selectedFilter == "Month") {
-          // Highlight all days in the selected month
-          if (rangeStart != null && rangeEnd != null) {
-            return (day.isAfter(rangeStart!) || isSameDay(day, rangeStart)) &&
-                (day.isBefore(rangeEnd!) || isSameDay(day, rangeEnd));
-          }
-          return false;
-        } else if (selectedFilter == "Custom") {
+        }
+
+        if (selectedFilter == "Week" && rangeStart != null && rangeEnd != null) {
+          return (day.isAfter(rangeStart!) || isSameDay(day, rangeStart)) &&
+              (day.isBefore(rangeEnd!) || isSameDay(day, rangeEnd));
+        }
+
+        if (selectedFilter == "Custom") {
           return isSameDay(rangeStart, day) || isSameDay(rangeEnd, day);
         }
+
         return false;
       },
+
 
       calendarStyle: CalendarStyle(
         todayDecoration: BoxDecoration(
@@ -330,6 +289,8 @@ class _RecordHistoryPageState extends State<RecordHistory> {
       headerStyle: HeaderStyle(
         titleCentered: true,
         formatButtonVisible: false,
+        leftChevronVisible: !(selectedFilter == "Month" || selectedFilter == "Year"),
+        rightChevronVisible: !(selectedFilter == "Month" || selectedFilter == "Year"),
         leftChevronIcon: Icon(Icons.chevron_left, color: purple),
         rightChevronIcon: Icon(Icons.chevron_right, color: purple),
         titleTextStyle: const TextStyle(
@@ -361,4 +322,128 @@ class _RecordHistoryPageState extends State<RecordHistory> {
       },
     );
   }
+
+  Future<void> pickDate(FilterMode mode, {required bool isStart}) async {
+    int selectedDay = (isStart ? startDate.day : endDate.day);
+    int selectedMonth = (isStart ? startDate.month : endDate.month);
+    int selectedYear = (isStart ? startDate.year : endDate.year);
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 300,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    child: const Text("Done", style: TextStyle(fontSize: 16)),
+                    onPressed: () {
+                      Navigator.pop(context);
+
+                      if (mode == FilterMode.day) {
+                        setState(() {
+                          DateTime picked = DateTime(selectedYear, selectedMonth, selectedDay);
+                          if (isStart) {
+                            startDate = picked;
+                          } else {
+                            endDate = picked;
+                          }
+
+                          focusedDay = picked;
+                          rangeStart = null;
+                          rangeEnd = null;
+                        });
+                      }
+
+                      if (mode == FilterMode.month) {
+                        setState(() {
+                          startDate = DateTime(selectedYear, selectedMonth, 1);
+                          endDate = DateTime(selectedYear, selectedMonth + 1, 0);
+                          focusedDay = startDate;
+                          rangeStart = startDate;
+                          rangeEnd = endDate;
+                        });
+                      }
+
+                      if (mode == FilterMode.year) {
+                        setState(() {
+                          startDate = DateTime(selectedYear, 1, 1);
+                          endDate = DateTime(selectedYear, 12, 31);
+                          focusedDay = startDate;
+                          rangeStart = startDate;
+                          rangeEnd = endDate;
+                        });
+                      }
+                    },
+                  )
+                ],
+              ),
+
+              Expanded(
+                child: Row(
+                  children: [
+                    // DAY PICKER (only for Day mode)
+                    if (mode == FilterMode.day)
+                      Expanded(
+                        child: CupertinoPicker(
+                          scrollController: FixedExtentScrollController(initialItem: selectedDay - 1),
+                          itemExtent: 32,
+                          onSelectedItemChanged: (index) {
+                            selectedDay = index + 1;
+                          },
+                          children: List.generate(31, (i) => Center(child: Text("${i + 1}"))),
+                        ),
+                      ),
+
+                    // MONTH PICKER (visible in day & month modes)
+                    if (mode != FilterMode.year)
+                      Expanded(
+                        child: CupertinoPicker(
+                          scrollController: FixedExtentScrollController(initialItem: selectedMonth - 1),
+                          itemExtent: 32,
+                          onSelectedItemChanged: (index) {
+                            selectedMonth = index + 1;
+                          },
+                          children: List.generate(
+                            12,
+                                (i) => Center(child: Text(DateFormat.MMMM().format(DateTime(0, i + 1)))),
+                          ),
+                        ),
+                      ),
+
+                    // YEAR PICKER (visible in all modes)
+                    Expanded(
+                      child: CupertinoPicker(
+                        scrollController: FixedExtentScrollController(initialItem: selectedYear - 2000),
+                        itemExtent: 32,
+                        onSelectedItemChanged: (index) {
+                          selectedYear = 2000 + index;
+                        },
+                        children: List.generate(
+                          101,
+                              (i) => Center(child: Text("${2000 + i}")),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+
+
+
+
+
+
+
 }
