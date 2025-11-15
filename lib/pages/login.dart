@@ -1,258 +1,299 @@
 import 'package:flutter/material.dart';
-import 'cocoa_yield_management.dart'; // Make sure to import this
+import 'reset_password.dart';
+import 'home.dart'; // ADD THIS IMPORT
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+class LoginPage extends StatefulWidget { // CHANGED to StatefulWidget
+  const LoginPage({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginState extends State<Login> {
-  final TextEditingController _mobileController = TextEditingController();
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
-  bool _isPasswordVisible = false;
-
-  // Sample credentials for testing
-  final String _sampleMobile = "0123456789";
-  final String _samplePassword = "password123";
-
-  @override
-  void initState() {
-    super.initState();
-    // Pre-fill with sample credentials for easy testing
-    _mobileController.text = _sampleMobile;
-    _passwordController.text = _samplePassword;
-  }
+  // Dummy credentials
+  final String _dummyPhone = '0174865555';
+  final String _dummyPassword = 'dmcocoa';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 60.0),
-
-              // Page Title
-              const Text(
-                'Log into account',
-                style: TextStyle(
-                  fontSize: 24.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-
-              const SizedBox(height: 40.0),
-
-              // Mobile Number Field
-              _buildInputField(
-                title: 'Mobile Number',
-                hintText: 'Mobile Number',
-                controller: _mobileController,
-                keyboardType: TextInputType.phone,
-                isPassword: false,
-              ),
-
-              const SizedBox(height: 24.0),
-
-              // Password Field
-              _buildInputField(
-                title: 'Password',
-                hintText: 'Enter password',
-                controller: _passwordController,
-                keyboardType: TextInputType.text,
-                isPassword: true,
-              ),
-
-              // Sample Credentials Hint
-              /*Container(
-                margin: const EdgeInsets.only(top: 16.0),
-                padding: const EdgeInsets.all(12.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8.0),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(248, 246, 255, 1),
+                Colors.white,
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              children: [
+                // BACK BUTTON
+                Row(
                   children: [
-                    Text(
-                      'Sample Login Credentials:',
-                        style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Mobile: 0123456789\nPassword: password123',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      color: const Color(0xFF2D108E),
                     ),
                   ],
                 ),
-              ),*/
 
-              const SizedBox(height: 24.0),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                // Logo
+                Image.asset(
+                  'assets/images/login.png',
+                  height: 150,
+                ),
+                const SizedBox(height: 40),
 
-              // Login Button
-              SizedBox(
-                width: double.infinity,
-                height: 50.0,
-                child: ElevatedButton(
-                  onPressed: () {
-                    _handleLogin();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2D108E),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    elevation: 0,
+                // Title
+                const Text(
+                  'Login to Your Account',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D108E),
                   ),
-                  child: const Text(
-                    'Log in',
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w600,
+                ),
+                const SizedBox(height: 40),
+
+                // Phone Number Field
+                TextField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    hintText: 'Phone Number (e.g.: 0128888888)',
+                    prefixIcon: const Icon(Icons.phone_rounded, color: Color(0xFF2D108E)),
+                    filled: true,
+                    fillColor: const Color.fromRGBO(128, 128, 128, 0.05),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF2D108E)),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
 
-              const SizedBox(height: 24.0),
-
-              // Forgot Password
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    print('Forgot password pressed');
-                  },
-                  child: const Text(
-                    'Forgot password?',
-                    style: TextStyle(
-                      color: Color(0xFF2D108E),
-                      fontSize: 14.0,
+                // Password Field
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    hintText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_rounded, color: Color(0xFF2D108E)),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                        color: const Color(0xFF2D108E),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                    filled: true,
+                    fillColor: const Color.fromRGBO(128, 128, 128, 0.05),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF2D108E)),
                     ),
                   ),
                 ),
-              ),
-            ],
+
+                // Forgot Password
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ResetPasswordPage()),
+                      );
+                    },
+                    child: const Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        color: Color(0xFF2D108E),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // Login Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2D108E),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                        : const Text(
+                      'Login',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Demo Credentials Hint
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2D108E).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF2D108E).withOpacity(0.3),
+                    ),
+                  ),
+                  child: const Column(
+                    children: [
+                      Text(
+                        'Demo Credentials:',
+                        style: TextStyle(
+                          color: Color(0xFF2D108E),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Phone: 0174865555 | Password: dmcocoa',
+                        style: TextStyle(
+                          color: Color(0xFF2D108E),
+                          fontSize: 11,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
+        ],
         ),
       ),
-    );
-  }
-
-  Widget _buildInputField({
-    required String title,
-    required String hintText,
-    required TextEditingController controller,
-    required TextInputType keyboardType,
-    required bool isPassword,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 14.0,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
         ),
+    ));
 
-        const SizedBox(height: 8.0),
-
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: isPassword && !_isPasswordVisible,
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(
-              color: Colors.grey[500],
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: BorderSide(
-                color: Colors.grey[400]!,
-                width: 1.0,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(
-                color: Color(0xFF2D108E),
-                width: 1.5,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 12.0,
-            ),
-            suffixIcon: isPassword
-                ? IconButton(
-              icon: Icon(
-                _isPasswordVisible
-                    ? Icons.visibility
-                    : Icons.visibility_off,
-                color: Colors.grey[600],
-              ),
-              onPressed: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
-              },
-            )
-                : null,
-          ),
-        ),
-      ],
-    );
   }
 
   void _handleLogin() {
-    final mobileNumber = _mobileController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text.trim();
 
-    // Check if credentials match sample credentials
-    if (mobileNumber == _sampleMobile && password == _samplePassword) {
-      // Successful login - navigate to Cocoa Yield Management
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const CocoaYieldManagement()),
-      );
-    } else {
-      // Show error for wrong credentials
-      _showError('Invalid mobile number or password. Use:\nMobile: 0123456789\nPassword: password123');
+    // Validation
+    if (phone.isEmpty || password.isEmpty) {
+      _showError('Please enter both phone number and password');
+      return;
     }
+
+    // Remove any spaces or dashes from phone number
+    final cleanPhone = phone.replaceAll(RegExp(r'[-\s]'), '');
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Simulate API call delay
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Check credentials
+      if (cleanPhone == _dummyPhone && password == _dummyPassword) {
+        // Successful login - navigate to home page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      } else {
+        // Failed login
+        _showError('Invalid phone number or password. Please try again.');
+      }
+    });
   }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline_rounded, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: Colors.red,
-        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
 
   @override
   void dispose() {
-    _mobileController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }

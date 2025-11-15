@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_farm.dart';
 import 'edit_farm.dart';
+import 'profile.dart';
 import '/widgets/side_tab.dart';
 
 class HomePage extends StatefulWidget {
@@ -37,15 +38,20 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      drawer: const SideTab(),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,        leading: IconButton( // Add hamburger menu icon
-        icon: const Icon(Icons.menu_rounded, color: Color(0xFF2D108E)),
-        onPressed: () {
-          Scaffold.of(context).openDrawer();
-        },
-      ),
-        title: const Text(
+        elevation: 0,
+        leading: Builder( // WRAP WITH BUILDER
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded, color: Color(0xFF2D108E)),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
+        automaticallyImplyLeading: false,
+          title: const Text(
           'My Farms',
           style: TextStyle(
             fontSize: 24,
@@ -54,10 +60,14 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         actions: [
+          // Profile button
           IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF2D108E)),
+            icon: const Icon(Icons.person_rounded, color: Color(0xFF2D108E)),
             onPressed: () {
-              // TODO: Navigate to notifications page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
             },
           ),
         ],

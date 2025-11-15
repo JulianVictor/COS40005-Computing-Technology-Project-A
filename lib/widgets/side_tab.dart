@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../pages/profile.dart'; // ADD IMPORT
+import '../pages/home.dart'; // ADD IMPORT
 
 class SideTab extends StatelessWidget {
   const SideTab({super.key});
@@ -87,11 +89,23 @@ class SideTab extends StatelessWidget {
             _buildSectionHeader('MENU'),
 
             _buildMenuItem(
+              icon: Icons.home_rounded, // CHANGED: Home icon
+              title: 'My Farms',
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.pushReplacement( // Go to home page
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomePage()),
+                );
+              },
+            ),
+
+            _buildMenuItem(
               icon: Icons.monitor_heart_rounded,
               title: 'Monitoring CPB Pest',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Navigate to CPB Pest Monitoring page
+                _showComingSoonDialog(context, 'CPB Pest Monitoring');
               },
             ),
 
@@ -100,7 +114,7 @@ class SideTab extends StatelessWidget {
               title: 'Cocoa Yield Management',
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushReplacementNamed(context, '/cocoa-yield');
+                _showComingSoonDialog(context, 'Cocoa Yield Management');
               },
             ),
 
@@ -109,7 +123,7 @@ class SideTab extends StatelessWidget {
               title: 'Record History',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Navigate to Record History page
+                _showComingSoonDialog(context, 'Record History');
               },
             ),
 
@@ -129,7 +143,7 @@ class SideTab extends StatelessWidget {
               title: 'Introduction of System',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Show system introduction
+                _showComingSoonDialog(context, 'System Introduction');
               },
             ),
 
@@ -138,7 +152,7 @@ class SideTab extends StatelessWidget {
               title: 'CPB Pest',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Show CPB pest information
+                _showComingSoonDialog(context, 'CPB Pest Information');
               },
             ),
 
@@ -147,7 +161,7 @@ class SideTab extends StatelessWidget {
               title: 'Tutorial',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Show app tutorials
+                _showComingSoonDialog(context, 'App Tutorials');
               },
             ),
 
@@ -156,7 +170,7 @@ class SideTab extends StatelessWidget {
               title: 'Contact Information',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Show contact information
+                _showComingSoonDialog(context, 'Contact Information');
               },
             ),
 
@@ -173,8 +187,11 @@ class SideTab extends StatelessWidget {
               icon: Icons.person_rounded,
               title: 'User Profile',
               onTap: () {
-                Navigator.pop(context);
-                // TODO: Navigate to User Profile page
+                Navigator.pop(context); // Close drawer
+                Navigator.push( // Navigate to profile page
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
               },
             ),
 
@@ -183,7 +200,7 @@ class SideTab extends StatelessWidget {
               title: 'Settings',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Navigate to Settings page
+                _showComingSoonDialog(context, 'Settings');
               },
             ),
 
@@ -286,6 +303,23 @@ class SideTab extends StatelessWidget {
     );
   }
 
+  // NEW: Show coming soon dialog for unimplemented features
+  void _showComingSoonDialog(BuildContext context, String featureName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Coming Soon'),
+        content: Text('$featureName feature is under development.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -362,7 +396,12 @@ class SideTab extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context); // Close dialog
-                        Navigator.pushReplacementNamed(context, '/');
+                        // TODO: Replace with actual logout logic
+                        Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/welcome',
+                                (route) => false
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
