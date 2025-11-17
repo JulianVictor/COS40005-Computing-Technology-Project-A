@@ -22,7 +22,7 @@ class SideTab extends StatelessWidget {
         ),
         child: ListView(
           padding: EdgeInsets.zero,
-          children: [
+          children: <Widget>[
             // Drawer Header
             Container(
               height: 180,
@@ -86,8 +86,7 @@ class SideTab extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Menu Section
-            _buildSectionHeader('MENU'),
-
+ /*          _buildSectionHeader('MENU'),
             _buildMenuItem(
               icon: Icons.home_rounded, // CHANGED: Home icon
               title: 'My Farms',
@@ -134,7 +133,7 @@ class SideTab extends StatelessWidget {
                 height: 1,
               ),
             ),
-
+*/
             // Info Section
             _buildSectionHeader('INFO'),
 
