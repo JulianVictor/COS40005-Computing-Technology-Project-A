@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_farm.dart';
 import 'edit_farm.dart';
+import 'home_dashboard.dart';
 import 'profile.dart';
 import '/widgets/side_tab.dart';
 
@@ -13,7 +14,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   // Sample farm data - in complete app, this would come from database
-  List<Farm> _farms = [
+  final List<Farm> _farms = [
     Farm(
       name: 'Happy Farm Kuching',
       state: 'Sarawak',
@@ -176,110 +177,117 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildFarmCard(Farm farm, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color.fromRGBO(128, 128, 128, 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        border: Border.all(
-          color: const Color.fromRGBO(128, 128, 128, 0.2),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Farm Name with Edit Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    farm.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2D108E),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => _editFarm(index),
-                  icon: const Icon(Icons.edit_rounded, size: 20),
-                  color: const Color(0xFF2D108E),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeDashboard(
+              farmName: farm.name,
+              latitude: farm.latitude,
+              longitude: farm.longitude,
+              treeStands: farm.treeStands,
+              latestEggCount: farm.latestEggCount,
+              needsTreatment: farm.needsTreatment,
             ),
-
-            const SizedBox(height: 12),
-
-            // Farm Details - IMPROVED LAYOUT
-            _buildFarmDetail('State', farm.state),
-            _buildFarmDetail('Tree Stands', '${farm.treeStands}'),
-            _buildFarmDetail('Latest CPB Egg Count', '${farm.latestEggCount}'),
-
-            const SizedBox(height: 16),
-
-            // Action Button and Location
-            Row(
-              children: [
-                // Action Button
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _handleFarmAction(farm);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: farm.needsTreatment
-                          ? Colors.red
-                          : const Color(0xFF4CAF50),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      farm.needsTreatment ? 'TREAT' : 'Continue Sampling',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Location Button
-                GestureDetector(
-                  onTap: () {
-                    _showMapPreview(farm);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2D108E).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.location_on_rounded,
-                      color: Color(0xFF2D108E),
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ],
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Color.fromRGBO(128, 128, 128, 0.1),
+              blurRadius: 10,
+              offset: Offset(0, 5),
             ),
           ],
+          border: Border.all(
+            color: const Color.fromRGBO(128, 128, 128, 0.2),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      farm.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D108E),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => _editFarm(index),
+                    icon: const Icon(Icons.edit_rounded, size: 20),
+                    color: const Color(0xFF2D108E),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+              _buildFarmDetail('State', farm.state),
+              _buildFarmDetail('Tree Stands', '${farm.treeStands}'),
+              _buildFarmDetail('Latest CPB Egg Count', '${farm.latestEggCount}'),
+
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _handleFarmAction(farm);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: farm.needsTreatment ? Colors.red : const Color(0xFF4CAF50),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        farm.needsTreatment ? 'TREAT' : 'Continue Sampling',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () {
+                      _showMapPreview(farm);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2D108E).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.location_on_rounded,
+                        color: Color(0xFF2D108E),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -320,7 +328,7 @@ class _HomePageState extends State<HomePage> {
   void _addNewFarm() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => AddFarmPage()),
+      MaterialPageRoute(builder: (context) => const AddFarmPage()),
     ).then((newFarm) {
       if (newFarm != null) {
         setState(() {

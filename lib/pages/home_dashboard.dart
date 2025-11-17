@@ -1,9 +1,26 @@
 import 'package:flutter/material.dart';
-import 'record_history.dart';
 import 'monitoring_cpb_pest.dart';
+import 'cocoa_yield_management.dart';
+import 'record_history.dart';
 
 class HomeDashboard extends StatelessWidget {
-  const HomeDashboard({super.key});
+  final String farmName;
+  final double latitude;
+  final double longitude;
+  final int treeStands;
+  final int latestEggCount;
+  final bool needsTreatment;
+
+  const HomeDashboard({
+    super.key,
+    required this.farmName,
+    required this.latitude,
+    required this.longitude,
+    required this.treeStands,
+    required this.latestEggCount,
+    required this.needsTreatment,
+  });
+
 
   final Color purple = const Color(0xFF2D108E);
 
@@ -75,7 +92,12 @@ class HomeDashboard extends StatelessWidget {
             }),
             const SizedBox(height: 12),
 
-            _mainButton("Cocoa Yield Management", () {}),
+            _mainButton("Cocoa Yield Management", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CocoaYieldManagement()),
+              );
+            }),
             const SizedBox(height: 12),
 
             _mainButton("Record History", () {

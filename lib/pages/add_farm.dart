@@ -43,21 +43,6 @@ class _AddFarmPageState extends State<AddFarmPage> {
     'Putrajaya': ['Putrajaya'],
   };
 
-  // Country list
-  final List<String> _countries = [
-    'Malaysia',
-    'Indonesia',
-    'Thailand',
-    'Vietnam',
-    'Philippines',
-    'Singapore',
-    'Brunei',
-    'Cambodia',
-    'Laos',
-    'Myanmar',
-    'Others'
-  ];
-
   List<String> _availableDistricts = [];
 
   @override
@@ -514,11 +499,6 @@ class _AddFarmPageState extends State<AddFarmPage> {
     // Basic validation
     if (_farmNameController.text.isEmpty) {
       _showError('Please enter farm name');
-      return;
-    }
-
-    if (_selectedCountry == null) {
-      _showError('Please select country');
       return;
     }
 

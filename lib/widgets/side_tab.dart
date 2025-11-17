@@ -86,7 +86,7 @@ class SideTab extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Menu Section
-            _buildSectionHeader('MENU'),
+     /*       _buildSectionHeader('MENU'),
 
             _buildMenuItem(
               icon: Icons.home_rounded, // CHANGED: Home icon
@@ -134,7 +134,7 @@ class SideTab extends StatelessWidget {
                 height: 1,
               ),
             ),
-
+*/
             // Info Section
             _buildSectionHeader('INFO'),
 
