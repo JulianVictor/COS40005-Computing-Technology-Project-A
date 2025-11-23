@@ -11,7 +11,7 @@ class CocoaYieldManagement extends StatefulWidget {
 }
 
 class _CocoaYieldManagementState extends State<CocoaYieldManagement> {
-  // Sample data - replace with actual data from database later
+  // Sample data
   List<YieldRecord> records = [
     YieldRecord(
       date: '2025-10-28',

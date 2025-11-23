@@ -40,7 +40,7 @@ class SideTab extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     const Text(
-                      'DMCOCOA',
+                      'CPB AI VISION',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 28,

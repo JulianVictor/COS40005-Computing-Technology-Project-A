@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Welcome Back!',
+                      'Welcome Back! Select a farm to start managing.',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
