@@ -1,3 +1,4 @@
+import 'package:cpbaivision_app/pages/home.dart';
 import 'package:flutter/material.dart';
 import 'services/supabase_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: TestConnectionPage(),
+      home: WelcomePage(),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_dashboard.dart';
+import 'home.dart';
 import 'cost_pesticide.dart';
 
 class MonitoringCPBPest extends StatelessWidget {
@@ -39,11 +39,11 @@ class MonitoringCPBPest extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _monitoringCard(
-              date: "-",
-              eil: "-",
-              sample: "-",
-              eggs: "-",
-              decision: "-",
+              date: "10.10.2025",
+              eil: "1.67",
+              sample: "3",
+              eggs: "2",
+              decision: "Continue Sampling",
               onDelete: () {},
             ),
           ],
