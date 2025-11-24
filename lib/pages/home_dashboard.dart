@@ -3,8 +3,6 @@ import 'monitoring_cpb_pest.dart';
 import 'cocoa_yield_management.dart';
 import 'record_history.dart';
 
-
-
 class HomeDashboard extends StatelessWidget {
   final String farmName;
   final double latitude;
@@ -22,7 +20,6 @@ class HomeDashboard extends StatelessWidget {
     required this.latestEggCount,
     required this.needsTreatment,
   });
-
 
   final Color purple = const Color(0xFF2D108E);
 

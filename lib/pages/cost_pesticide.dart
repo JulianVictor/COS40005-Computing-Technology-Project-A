@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'labour_cost.dart';
 
-
 class CostPesticidePage extends StatefulWidget {
   const CostPesticidePage({super.key});
 
@@ -65,7 +64,7 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
         backgroundColor: purple,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, false), // Return false when back
         ),
         centerTitle: true,
         title: const Text(
@@ -81,7 +80,7 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              // ✅ Date Selector (Figma Style)
+              // Date Selector
               Center(
                 child: GestureDetector(
                   onTap: _pickDate,
@@ -125,16 +124,20 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
 
               Row(
                 children: [
-                  Expanded(child: _bottomButton("Previous", purple, () => Navigator.pop(context))),
+                  Expanded(child: _bottomButton("Previous", purple, () => Navigator.pop(context, false))),
                   const SizedBox(width: 10),
                   Expanded(child: _bottomButton("Draft", Colors.grey.shade600, () {})),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _bottomButton("Next", purple, () {
+                      // Return true when Next is pressed to create new box
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const LabourCostPage()), // Fixed class name
-                      );
+                        MaterialPageRoute(builder: (context) => const LabourCostPage()),
+                      ).then((_) {
+                        // When returning from LabourCostPage, pop with true
+                        Navigator.pop(context, true);
+                      });
                     }),
                   ),
                 ],
@@ -187,7 +190,6 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
       ),
     );
   }
-
 
   Widget _bottomButton(String text, Color color, VoidCallback onTap) {
     return SizedBox(

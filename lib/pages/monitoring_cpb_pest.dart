@@ -1,11 +1,69 @@
 import 'package:flutter/material.dart';
-import 'home_dashboard.dart';
 import 'cost_pesticide.dart';
 
-class MonitoringCPBPest extends StatelessWidget {
+class MonitoringCPBPest extends StatefulWidget {
+  const MonitoringCPBPest({super.key});
+
+  @override
+  State<MonitoringCPBPest> createState() => _MonitoringCPBPestState();
+}
+
+class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
   final Color purple = const Color(0xFF2D108E);
 
-  const MonitoringCPBPest({super.key});
+  // List to store all monitoring records
+  List<Map<String, String>> _monitoringRecords = [
+    {
+      'date': '29.09.2025',
+      'eil': '1.67',
+      'sample': '2',
+      'eggs': '13',
+      'decision': 'TREAT',
+    },
+    {
+      'date': '-',
+      'eil': '-',
+      'sample': '-',
+      'eggs': '-',
+      'decision': '-',
+    },
+  ];
+
+  // Function to add a new monitoring card
+  void _addNewMonitoringCard() {
+    setState(() {
+      _monitoringRecords.add({
+        'date': '-',
+        'eil': '-',
+        'sample': '-',
+        'eggs': '-',
+        'decision': '-',
+      });
+    });
+  }
+
+  // Function to delete a monitoring card
+  void _deleteMonitoringCard(int index) {
+    setState(() {
+      _monitoringRecords.removeAt(index);
+    });
+  }
+
+  // Function to navigate to Cost Pesticide page and wait for result
+  void _navigateToCostPesticide() async {
+    // Wait for result from CostPesticidePage
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CostPesticidePage(),
+      ),
+    );
+
+    // If result is true, add a new monitoring card
+    if (result == true) {
+      _addNewMonitoringCard();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,35 +87,34 @@ class MonitoringCPBPest extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            _monitoringCard(
-              date: "29.09.2025",
-              eil: "1.67",
-              sample: "2",
-              eggs: "13",
-              decision: "TREAT",
-              onDelete: () {},
-            ),
-            const SizedBox(height: 16),
-            _monitoringCard(
-              date: "-",
-              eil: "-",
-              sample: "-",
-              eggs: "-",
-              decision: "-",
-              onDelete: () {},
-            ),
+            // Display all monitoring cards
+            ..._monitoringRecords.asMap().entries.map((entry) {
+              final index = entry.key;
+              final record = entry.value;
+
+              return Column(
+                children: [
+                  _monitoringCard(
+                    date: record['date']!,
+                    eil: record['eil']!,
+                    sample: record['sample']!,
+                    eggs: record['eggs']!,
+                    decision: record['decision']!,
+                    onDelete: () => _deleteMonitoringCard(index),
+                  ),
+                  if (index < _monitoringRecords.length - 1)
+                    const SizedBox(height: 16),
+                ],
+              );
+            }).toList(),
           ],
         ),
       ),
 
+      // FAB navigates to Cost Pesticide page
       floatingActionButton: FloatingActionButton(
         backgroundColor: purple,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CostPesticidePage()),
-          );
-        },
+        onPressed: _navigateToCostPesticide,
         child: const Icon(Icons.add, size: 28, color: Colors.white),
       ),
 
@@ -96,17 +153,26 @@ class MonitoringCPBPest extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(date, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    date,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text("EIL: $eil"),
+                  const SizedBox(height: 4),
                   Text("Total Sample: $sample"),
+                  const SizedBox(height: 4),
                   Text("Cumulative No. of CPB Eggs: $eggs"),
+                  const SizedBox(height: 4),
                   Text("Decision: $decision"),
                 ],
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.grey),
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
               onPressed: onDelete,
             ),
           ],
@@ -115,4 +181,3 @@ class MonitoringCPBPest extends StatelessWidget {
     );
   }
 }
-
