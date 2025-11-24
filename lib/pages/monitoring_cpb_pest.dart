@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
 import 'cost_pesticide.dart';
+import '../models/database_models.dart'; // Add this import
 
 class MonitoringCPBPest extends StatelessWidget {
   final Color purple = const Color(0xFF2D108E);
+  final Farm farm; // Add this
 
-  const MonitoringCPBPest({super.key});
+  const MonitoringCPBPest({
+    super.key,
+    required this.farm, // Add this
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +24,17 @@ class MonitoringCPBPest extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
-        title: const Text(
-          "Monitoring CPB Pest",
-          style: TextStyle(color: Colors.white),
+        title: Column(
+          children: [
+            const Text(
+              "Monitoring CPB Pest",
+              style: TextStyle(color: Colors.white),
+            ),
+            Text(
+              farm.farmName, // Show farm name
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ],
         ),
       ),
 
@@ -29,7 +42,9 @@ class MonitoringCPBPest extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
+            // You can now use farm data in your cards
             _monitoringCard(
+              farmName: farm.farmName, // Pass farm name
               date: "29.09.2025",
               eil: "1.67",
               sample: "2",
@@ -39,6 +54,7 @@ class MonitoringCPBPest extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _monitoringCard(
+              farmName: farm.farmName, // Pass farm name
               date: "10.10.2025",
               eil: "1.67",
               sample: "3",
@@ -55,7 +71,9 @@ class MonitoringCPBPest extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const CostPesticidePage()),
+            MaterialPageRoute(
+              builder: (context) => CostPesticidePage(), // Pass farm to next page if needed
+            ),
           );
         },
         child: const Icon(Icons.add, size: 28, color: Colors.white),
@@ -77,6 +95,7 @@ class MonitoringCPBPest extends StatelessWidget {
   }
 
   Widget _monitoringCard({
+    required String farmName, // Add farmName parameter
     required String date,
     required String eil,
     required String sample,
@@ -96,6 +115,8 @@ class MonitoringCPBPest extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text("Farm: $farmName", style: const TextStyle(fontWeight: FontWeight.bold)), // Show farm name
+                  const SizedBox(height: 4),
                   Text(date, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 8),
                   Text("EIL: $eil"),
@@ -115,4 +136,3 @@ class MonitoringCPBPest extends StatelessWidget {
     );
   }
 }
-

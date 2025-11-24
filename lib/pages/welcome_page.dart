@@ -53,7 +53,7 @@ class WelcomePage extends StatelessWidget {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Welcome!',
+                      'CPB Vision',
                       style: TextStyle(
                         fontSize: 50,
                         fontWeight: FontWeight.bold,

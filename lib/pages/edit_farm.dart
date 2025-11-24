@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'home.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/database_models.dart'; // Import your actual Farm model
 
 class EditFarmPage extends StatefulWidget {
   final Farm farm;
@@ -20,6 +21,7 @@ class EditFarmPage extends StatefulWidget {
 class _EditFarmPageState extends State<EditFarmPage> {
   // Form controllers - pre-filled with existing farm data
   late TextEditingController _farmNameController;
+  late TextEditingController _villageController;
   late TextEditingController _postcodeController;
   late TextEditingController _farmAreaController;
   late TextEditingController _treeStandsController;
@@ -56,17 +58,18 @@ class _EditFarmPageState extends State<EditFarmPage> {
   void initState() {
     super.initState();
 
-    // Pre-fill controllers with existing farm data
-    _farmNameController = TextEditingController(text: widget.farm.name);
-    _postcodeController = TextEditingController();
-    _farmAreaController = TextEditingController(text: '0'); // You might want to add this field to Farm model
-    _treeStandsController = TextEditingController(text: widget.farm.treeStands.toString());
-    _latitudeController = TextEditingController(text: widget.farm.latitude.toStringAsFixed(4));
-    _longitudeController = TextEditingController(text: widget.farm.longitude.toStringAsFixed(4));
+    // Pre-fill controllers with existing farm data using your actual Farm model
+    _farmNameController = TextEditingController(text: widget.farm.farmName);
+    _villageController = TextEditingController(text: widget.farm.village);
+    _postcodeController = TextEditingController(text: widget.farm.postcode);
+    _farmAreaController = TextEditingController(text: widget.farm.areaHectares.toString());
+    _treeStandsController = TextEditingController(text: widget.farm.treeCount.toString());
+    _latitudeController = TextEditingController(text: '0.0'); // You might want to add these to your Farm model
+    _longitudeController = TextEditingController(text: '0.0'); // You might want to add these to your Farm model
 
     // Pre-fill dropdowns
     _selectedState = widget.farm.state;
-    _selectedDistrict = null; // You might want to add district to Farm model
+    _selectedDistrict = widget.farm.district;
 
     // Set available districts based on selected state
     if (_selectedState != null) {
@@ -152,6 +155,14 @@ class _EditFarmPageState extends State<EditFarmPage> {
                             ),
                             const SizedBox(height: 16),
 
+                            // Village
+                            _buildTextField(
+                              controller: _villageController,
+                              hintText: 'Village',
+                              icon: Icons.location_city_rounded,
+                            ),
+                            const SizedBox(height: 16),
+
                             // State Dropdown
                             _buildDropdownField(
                               value: _selectedState,
@@ -183,10 +194,10 @@ class _EditFarmPageState extends State<EditFarmPage> {
                               ),
                             if (_selectedState != null) const SizedBox(height: 16),
 
-                            // Postcode (Optional)
+                            // Postcode
                             _buildTextField(
                               controller: _postcodeController,
-                              hintText: 'Postcode (Optional)',
+                              hintText: 'Postcode',
                               icon: Icons.location_on_rounded,
                               keyboardType: TextInputType.number,
                             ),
@@ -514,15 +525,30 @@ class _EditFarmPageState extends State<EditFarmPage> {
     );
   }
 
-  void _saveChanges() {
+  void _saveChanges() async {
     // Basic validation
     if (_farmNameController.text.isEmpty) {
       _showError('Please enter farm name');
       return;
     }
 
+    if (_villageController.text.isEmpty) {
+      _showError('Please enter village');
+      return;
+    }
+
     if (_selectedState == null) {
       _showError('Please select state');
+      return;
+    }
+
+    if (_selectedDistrict == null) {
+      _showError('Please select district');
+      return;
+    }
+
+    if (_postcodeController.text.isEmpty) {
+      _showError('Please enter postcode');
       return;
     }
 
@@ -536,22 +562,75 @@ class _EditFarmPageState extends State<EditFarmPage> {
       return;
     }
 
-    // Create updated farm
-    final updatedFarm = Farm(
-      name: _farmNameController.text.trim(),
-      state: _selectedState!,
-      treeStands: int.tryParse(_treeStandsController.text) ?? 0,
-      latestEggCount: widget.farm.latestEggCount, // Keep existing value
-      needsTreatment: widget.farm.needsTreatment, // Keep existing value
-      latitude: double.tryParse(_latitudeController.text) ?? 0.0,
-      longitude: double.tryParse(_longitudeController.text) ?? 0.0,
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
     );
 
-    // Call the callback to update the farm in home page
-    widget.onFarmUpdated(updatedFarm, widget.farmIndex);
+    try {
+      // Update farm in Supabase
+      final updateData = {
+        'farmName': _farmNameController.text.trim(),
+        'village': _villageController.text.trim(),
+        'state': _selectedState!,
+        'district': _selectedDistrict!,
+        'postcode': _postcodeController.text.trim(),
+        'areaHectares': double.tryParse(_farmAreaController.text) ?? 0.0,
+        'treeCount': int.tryParse(_treeStandsController.text) ?? 0,
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
 
-    // Navigate back
-    Navigator.pop(context);
+      await Supabase.instance.client
+          .from('farms')
+          .update(updateData)
+          .eq('farmId', widget.farm.farmId);
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Create updated farm object for callback
+      final updatedFarm = Farm(
+        farmId: widget.farm.farmId,
+        ownerId: widget.farm.ownerId,
+        farmName: _farmNameController.text.trim(),
+        state: _selectedState!,
+        district: _selectedDistrict!,
+        village: _villageController.text.trim(),
+        postcode: _postcodeController.text.trim(),
+        areaHectares: double.tryParse(_farmAreaController.text) ?? 0.0,
+        treeCount: int.tryParse(_treeStandsController.text) ?? 0,
+        createdAt: widget.farm.createdAt,
+        updatedAt: DateTime.now(),
+        isActive: widget.farm.isActive,
+      );
+
+      // Call the callback to update the farm in home page
+      widget.onFarmUpdated(updatedFarm, widget.farmIndex);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Farm updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Navigate back
+      Navigator.pop(context);
+
+    } catch (e) {
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show error message
+      _showError('Failed to update farm: $e');
+    }
   }
 
   void _showError(String message) {
@@ -566,6 +645,7 @@ class _EditFarmPageState extends State<EditFarmPage> {
   @override
   void dispose() {
     _farmNameController.dispose();
+    _villageController.dispose();
     _postcodeController.dispose();
     _farmAreaController.dispose();
     _treeStandsController.dispose();

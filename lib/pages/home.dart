@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'add_farm.dart';
 import 'edit_farm.dart';
 import 'home_dashboard.dart';
 import 'profile.dart';
 import '/widgets/side_tab.dart';
+import '/services/database_service.dart';
+import '/models/database_models.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,27 +16,41 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Sample farm data - in complete app, this would come from database
-  final List<Farm> _farms = [
-    Farm(
-      name: 'Happy Farm Kuching',
-      state: 'Sarawak',
-      treeStands: 8888,
-      latestEggCount: 15,
-      needsTreatment: true,
-      latitude: 1.5535,
-      longitude: 110.3593,
-    ),
-    Farm(
-      name: 'Green Valley Farm',
-      state: 'Sabah',
-      treeStands: 6500,
-      latestEggCount: 8,
-      needsTreatment: false,
-      latitude: 5.9804,
-      longitude: 116.0735,
-    ),
-  ];
+  final DatabaseService _dbService = DatabaseService();
+  List<Farm> _farms = [];
+  bool _isLoading = true;
+  Farm? _selectedFarm; // Track the currently selected farm
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFarms();
+  }
+
+  Future<void> _loadFarms() async {
+    final String? currentUserId = await _getCurrentUserId();
+    if (currentUserId != null) {
+      final farms = await _dbService.getUserFarms(currentUserId);
+      setState(() {
+        _farms = farms;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<String?> _getCurrentUserId() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      return user?.id;
+    } catch (e) {
+      print('Error getting current user: $e');
+      return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +60,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: Builder( // WRAP WITH BUILDER
+        leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu_rounded, color: Color(0xFF2D108E)),
             onPressed: () {
@@ -52,7 +69,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         automaticallyImplyLeading: false,
-          title: const Text(
+        title: const Text(
           'My Farms',
           style: TextStyle(
             fontSize: 24,
@@ -61,7 +78,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         actions: [
-          // Profile button
           IconButton(
             icon: const Icon(Icons.person_rounded, color: Color(0xFF2D108E)),
             onPressed: () {
@@ -123,7 +139,11 @@ class _HomePageState extends State<HomePage> {
 
               // Farms list
               Expanded(
-                child: _farms.isEmpty
+                child: _isLoading
+                    ? const Center(
+                  child: CircularProgressIndicator(),
+                )
+                    : _farms.isEmpty
                     ? const Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -179,16 +199,22 @@ class _HomePageState extends State<HomePage> {
   Widget _buildFarmCard(Farm farm, int index) {
     return GestureDetector(
       onTap: () {
+        // Set the selected farm and navigate to dashboard
+        setState(() {
+          _selectedFarm = farm;
+        });
+
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => HomeDashboard(
-              farmName: farm.name,
-              latitude: farm.latitude,
-              longitude: farm.longitude,
-              treeStands: farm.treeStands,
-              latestEggCount: farm.latestEggCount,
-              needsTreatment: farm.needsTreatment,
+              farm: farm, // Pass the entire farm object
+              onFarmSelected: (selectedFarm) {
+                // Callback to update selected farm if needed
+                setState(() {
+                  _selectedFarm = selectedFarm;
+                });
+              },
             ),
           ),
         );
@@ -219,7 +245,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Expanded(
                     child: Text(
-                      farm.name,
+                      farm.farmName,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -238,8 +264,9 @@ class _HomePageState extends State<HomePage> {
 
               const SizedBox(height: 12),
               _buildFarmDetail('State', farm.state),
-              _buildFarmDetail('Tree Stands', '${farm.treeStands}'),
-              _buildFarmDetail('Latest CPB Egg Count', '${farm.latestEggCount}'),
+              _buildFarmDetail('District', farm.district),
+              _buildFarmDetail('Tree Stands', '${farm.treeCount}'),
+              _buildFarmDetail('Area', '${farm.areaHectares} hectares'),
 
               const SizedBox(height: 16),
               Row(
@@ -250,16 +277,16 @@ class _HomePageState extends State<HomePage> {
                         _handleFarmAction(farm);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: farm.needsTreatment ? Colors.red : const Color(0xFF4CAF50),
+                        backgroundColor: farm.isActive ? const Color(0xFF4CAF50) : Colors.grey,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
-                        farm.needsTreatment ? 'TREAT' : 'Continue Sampling',
-                        style: const TextStyle(
+                      child: const Text(
+                        'Manage Farm',
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -300,7 +327,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 140, // Reduced width for better alignment
+            width: 140,
             child: Text(
               '$label:',
               style: const TextStyle(
@@ -324,20 +351,28 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
   void _addNewFarm() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AddFarmPage()),
-    ).then((newFarm) {
-      if (newFarm != null) {
-        setState(() {
-          _farms.add(newFarm);
-        });
+    ).then((result) {
+      if (result != null && result is Farm) {
+        // Farm was added successfully, reload the list
+        _loadFarms();
+
+        // Optional: Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${result.farmName} added successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (result == true) {
+        // Fallback for boolean return (backward compatibility)
+        _loadFarms();
       }
     });
   }
-
   void _editFarm(int index) {
     Navigator.push(
       context,
@@ -345,15 +380,13 @@ class _HomePageState extends State<HomePage> {
         builder: (context) => EditFarmPage(
           farm: _farms[index],
           farmIndex: index,
-          onFarmUpdated: (updatedFarm, index) {
-            setState(() {
-              _farms[index] = updatedFarm;
-            });
+          onFarmUpdated: (Farm updatedFarm, int index) { // Add types here
+            // Reload farms to get updated data
+            _loadFarms();
 
-            // Show success message
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('${updatedFarm.name} updated successfully!'),
+                content: Text('${updatedFarm.farmName} updated successfully!'),
                 backgroundColor: Colors.green,
               ),
             );
@@ -363,31 +396,33 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
   void _handleFarmAction(Farm farm) {
-    if (farm.needsTreatment) {
-      // Navigate to treatment page
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Navigate to treatment page for ${farm.name}'),
-          backgroundColor: Colors.red,
+    // Set as selected farm and navigate to dashboard
+    setState(() {
+      _selectedFarm = farm;
+    });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomeDashboard(
+          farm: farm,
+          onFarmSelected: (selectedFarm) {
+            setState(() {
+              _selectedFarm = selectedFarm;
+            });
+          },
         ),
-      );
-    } else {
-      // Navigate to sampling page
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Continue sampling for ${farm.name}'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
+      ),
+    );
   }
 
   void _showMapPreview(Farm farm) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Location: ${farm.name}'),
+        title: Text('Location: ${farm.farmName}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -417,7 +452,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${farm.latitude.toStringAsFixed(4)}, ${farm.longitude.toStringAsFixed(4)}',
+                    '${farm.state}, ${farm.district}',
                     style: const TextStyle(
                       color: Colors.grey,
                       fontSize: 12,
@@ -437,25 +472,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-}
 
-// Farm model class
-class Farm {
-  final String name;
-  final String state;
-  final int treeStands;
-  final int latestEggCount;
-  final bool needsTreatment;
-  final double latitude;
-  final double longitude;
-
-  Farm({
-    required this.name,
-    required this.state,
-    required this.treeStands,
-    required this.latestEggCount,
-    required this.needsTreatment,
-    required this.latitude,
-    required this.longitude,
-  });
+  // Getter for selected farm (can be used by other pages)
+  Farm? get selectedFarm => _selectedFarm;
 }
