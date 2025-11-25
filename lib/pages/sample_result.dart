@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'scan_sample.dart';
+import 'labour_cost.dart'; // Add this import for navigation back to Labour cost page
 
 class SampleResultPage extends StatefulWidget {
   const SampleResultPage({super.key});
@@ -18,7 +19,6 @@ class _SampleResultPageState extends State<SampleResultPage> {
     final now = DateTime.now();
     return "${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}";
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -119,29 +119,51 @@ class _SampleResultPageState extends State<SampleResultPage> {
 
               const SizedBox(height: 30),
 
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: purple,
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+              // Navigation Buttons - Updated to match Pesticide and Labour pages
+              Row(
+                children: [
+                  Expanded(
+                    child: _bottomButton("Previous", purple, () {
+                      // Navigate back to Labour Cost page
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LabourCostPage()),
+                      );
+                    }),
                   ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ScanSamplePage()),
-                    );
-                  },
-                  child: const Text(
-                    "Add Sample",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _bottomButton("Add Sample", purple, () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ScanSamplePage()),
+                      );
+                    }),
                   ),
-                ),
+                ],
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // Bottom button widget to match the style from other pages
+  Widget _bottomButton(String text, Color color, VoidCallback onTap) {
+    return SizedBox(
+      height: 45,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+        onPressed: onTap,
+        child: Text(
+          text,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
         ),
       ),
     );
