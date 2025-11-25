@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'sample_result.dart';
-import 'cost_pesticide.dart'; // Add this import
+import 'scan_sample.dart';
 
 class LabourCostPage extends StatefulWidget {
   const LabourCostPage({super.key});
@@ -93,21 +92,13 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
 
               Row(
                 children: [
-                  Expanded(
-                    child: _bottomButton("Previous", purple, () {
-                      // Navigate back to Pesticide Cost page
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const CostPesticidePage()),
-                      );
-                    }),
-                  ),
+                  Expanded(child: _bottomButton("Previous", purple, () => Navigator.pop(context))),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _bottomButton("Next", purple, () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SampleResultPage()),
+                        MaterialPageRoute(builder: (context) => const ScanSamplePage()),
                       );
                     }),
                   ),

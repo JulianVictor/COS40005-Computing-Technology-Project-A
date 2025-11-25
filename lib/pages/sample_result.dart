@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'scan_sample.dart';
-import 'labour_cost.dart'; // Add this import for navigation back to Labour cost page
+import 'labour_cost.dart'; // Add this import for navigation back to Labour cost
 
 class SampleResultPage extends StatefulWidget {
-  const SampleResultPage({super.key});
+  const SampleResultPage({super.key, required Map<String, Object> scanData});
 
   @override
   State<SampleResultPage> createState() => _SampleResultPageState();

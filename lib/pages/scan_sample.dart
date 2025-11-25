@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
+import 'sample_result.dart';
 
 class ScanSamplePage extends StatefulWidget {
   final int sampleNumber;
@@ -409,15 +410,22 @@ class _ScanSamplePageState extends State<ScanSamplePage> {
               children: [
                 _bottomButton("Previous", purple, () => Navigator.pop(context)),
                 const SizedBox(width: 10),
-                _bottomButton("Draft", Colors.grey.shade600, () {}),
-                const SizedBox(width: 10),
                 _bottomButton("Submit", purple, () {
-                  Navigator.pop(context, {
-                    "totalEggs": cumulative,
-                    "average": average,
-                    "decision": treat ? "Treat" : "Continue taking sample",
-                    "pods": podResults,
-                  });
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SampleResultPage(
+                        scanData: {
+                          "totalEggs": cumulative > 0 ? cumulative : 0, // Use 0 instead of null
+                          "average": cumulative > 0 ? average : 0.0,    // Use 0.0 instead of null
+                          "decision": cumulative > 0
+                              ? (average >= eil ? "TREAT" : "Continue taking sample")
+                              : "-",                                    // Use "-" instead of null
+                          "pods": podResults,
+                        },
+                      ),
+                    ),
+                  );
                 }),
               ],
             ),
