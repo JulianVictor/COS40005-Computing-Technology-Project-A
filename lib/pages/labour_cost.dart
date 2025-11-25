@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'sample_result.dart';
+import 'cost_pesticide.dart'; // Add this import
 
 class LabourCostPage extends StatefulWidget {
   const LabourCostPage({super.key});
@@ -11,12 +13,15 @@ class LabourCostPage extends StatefulWidget {
 class _DailyLabourCostPageState extends State<LabourCostPage> {
   final Color purple = const Color(0xFF2D108E);
 
+  DateTime selectedDate = DateTime.now();
   final TextEditingController labourCostController = TextEditingController();
   final TextEditingController farmAreaController = TextEditingController();
   final TextEditingController workCostController = TextEditingController();
   final TextEditingController beansPriceController = TextEditingController();
   final TextEditingController beansProductivityController = TextEditingController();
   final TextEditingController kController = TextEditingController();
+
+  String formatDate(DateTime date) => DateFormat("dd MMM yyyy").format(date);
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +47,28 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Date Display (Non-interactive) - Added from Pesticide page
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: purple),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.calendar_today, size: 18, color: Colors.black87),
+                      const SizedBox(width: 10),
+                      Text(formatDate(DateTime.now()), // Always show current date
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
               _label("Daily Labour Cost (RM)"),
               const SizedBox(height: 6),
               _inputField(labourCostController, keyboard: TextInputType.number),
@@ -65,19 +92,25 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
               const SizedBox(height: 30),
 
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _bottomButton("Previous", purple, () => Navigator.pop(context)),
-                  const SizedBox(width: 12),
-                  _bottomButton("Draft", Colors.grey.shade600, () {}),
-                  const SizedBox(width: 12),
-                  _bottomButton("Next", purple, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const SampleResultPage()),
-                    );
-                  }),
-                  
+                  Expanded(
+                    child: _bottomButton("Previous", purple, () {
+                      // Navigate back to Pesticide Cost page
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CostPesticidePage()),
+                      );
+                    }),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _bottomButton("Next", purple, () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SampleResultPage()),
+                      );
+                    }),
+                  ),
                 ],
               ),
             ],
@@ -117,12 +150,11 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: purple, width: 2), // Remove const here
+          borderSide: BorderSide(color: purple, width: 2),
         ),
       ),
     );
   }
-
 
   Widget _bottomButton(String text, Color color, VoidCallback onTap) {
     return Expanded(
@@ -143,7 +175,7 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
         ),
       ),
     );
-  } // ← This brace was missing
+  }
 
   @override
   void initState() {
@@ -176,7 +208,6 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
     );
   }
 
-
   void _calculateWorkCost() {
     double labour = double.tryParse(labourCostController.text) ?? 0;
     double area = double.tryParse(farmAreaController.text) ?? 1; // avoid divide by zero
@@ -184,6 +215,4 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
     double result = labour / area;
     workCostController.text = result.isFinite ? result.toStringAsFixed(2) : "0.00";
   }
-
-
-} // ← This brace was missing for the class
+}
