@@ -42,11 +42,33 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
     });
   }
 
-  // Function to delete a monitoring card
+  // Function to delete a monitoring card with confirmation
   void _deleteMonitoringCard(int index) {
-    setState(() {
-      _monitoringRecords.removeAt(index);
-    });
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Record'),
+        content: const Text('Are you sure you want to delete this record?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _monitoringRecords.removeAt(index);
+              });
+              Navigator.pop(context);
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // Function to navigate to Cost Pesticide page and wait for result
@@ -100,7 +122,7 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
                     sample: record['sample']!,
                     eggs: record['eggs']!,
                     decision: record['decision']!,
-                    onDelete: () => _deleteMonitoringCard(index),
+                    onDelete: () => _deleteMonitoringCard(index), onEdit: () {  },
                   ),
                   if (index < _monitoringRecords.length - 1)
                     const SizedBox(height: 16),
@@ -139,7 +161,7 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
     required String sample,
     required String eggs,
     required String decision,
-    required VoidCallback onDelete,
+    required VoidCallback onDelete, required Null Function() onEdit,
   }) {
     return Card(
       elevation: 5,
@@ -171,9 +193,10 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
                 ],
               ),
             ),
+            // Delete button only - changed to filled bin icon
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
               onPressed: onDelete,
+              icon: const Icon(Icons.delete, color: Colors.red),
             ),
           ],
         ),
