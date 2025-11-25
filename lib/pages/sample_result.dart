@@ -58,7 +58,12 @@ class _SampleResultPageState extends State<SampleResultPage> {
         backgroundColor: purple,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ScanSamplePage()),
+            );
+          },
         ),
         centerTitle: true,
         title: const Text("Sampling Result", style: TextStyle(color: Colors.white)),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'labour_cost.dart';
+import 'monitoring_cpb_pest.dart';
+
 
 class CostPesticidePage extends StatefulWidget {
   const CostPesticidePage({super.key});
@@ -65,7 +67,12 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
         backgroundColor: purple,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context, false), // Return false when back
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MonitoringCPBPest()),
+            );
+          },
         ),
         centerTitle: true,
         title: const Text(
@@ -122,7 +129,13 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
 
               Row(
                 children: [
-                  Expanded(child: _bottomButton("Previous", purple, () => Navigator.pop(context, false))),
+                  Expanded(child: _bottomButton("Previous", purple, () {
+                    // FIXED: Navigate to MonitoringCPBPest instead of just popping
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MonitoringCPBPest()),
+                    );
+                  })),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _bottomButton("Next", purple, () {

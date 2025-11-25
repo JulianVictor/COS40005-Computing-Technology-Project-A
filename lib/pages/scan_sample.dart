@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:my_first_app/pages/labour_cost.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
@@ -250,7 +251,12 @@ class _ScanSamplePageState extends State<ScanSamplePage> {
         backgroundColor: purple,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LabourCostPage()),
+            );
+          },
         ),
         centerTitle: true,
         title: const Text("Sampling Result", style: TextStyle(color: Colors.white)),
@@ -408,7 +414,12 @@ class _ScanSamplePageState extends State<ScanSamplePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _bottomButton("Previous", purple, () => Navigator.pop(context)),
+                _bottomButton("Previous", purple, () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LabourCostPage()),
+                  );
+                }),
                 const SizedBox(width: 10),
                 _bottomButton("Submit", purple, () {
                   Navigator.pushReplacement(
@@ -416,11 +427,11 @@ class _ScanSamplePageState extends State<ScanSamplePage> {
                     MaterialPageRoute(
                       builder: (context) => SampleResultPage(
                         scanData: {
-                          "totalEggs": cumulative > 0 ? cumulative : 0, // Use 0 instead of null
-                          "average": cumulative > 0 ? average : 0.0,    // Use 0.0 instead of null
+                          "totalEggs": cumulative > 0 ? cumulative : 0,
+                          "average": cumulative > 0 ? average : 0.0,
                           "decision": cumulative > 0
                               ? (average >= eil ? "TREAT" : "Continue taking sample")
-                              : "-",                                    // Use "-" instead of null
+                              : "-",
                           "pods": podResults,
                         },
                       ),

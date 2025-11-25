@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'cost_pesticide.dart';
+import 'home_dashboard.dart';
 
 class MonitoringCPBPest extends StatefulWidget {
   const MonitoringCPBPest({super.key});
@@ -96,7 +97,12 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
         backgroundColor: purple,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeDashboard()),
+            );
+          },
         ),
         centerTitle: true,
         title: const Text(

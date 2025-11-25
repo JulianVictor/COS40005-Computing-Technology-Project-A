@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'scan_sample.dart';
+import 'cost_pesticide.dart';
 
 class LabourCostPage extends StatefulWidget {
   const LabourCostPage({super.key});
@@ -66,7 +67,12 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
         backgroundColor: purple,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const CostPesticidePage()),
+            );
+          },
         ),
         centerTitle: true,
         title: const Text(
@@ -127,7 +133,13 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
 
               Row(
                 children: [
-                  Expanded(child: _bottomButton("Previous", purple, () => Navigator.pop(context))),
+                  Expanded(child: _bottomButton("Previous", purple, () {
+                    // FIXED: Navigate to CostPesticidePage instead of just popping
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CostPesticidePage()),
+                    );
+                  })),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _bottomButton("Next", purple, () {
