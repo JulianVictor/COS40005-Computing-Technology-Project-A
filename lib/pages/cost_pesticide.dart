@@ -31,22 +31,6 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
     });
   }
 
-  Future<void> _pickDate() async {
-    DateTime? date = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.light(primary: purple),
-        ),
-        child: child!,
-      ),
-    );
-    if (date != null) setState(() => selectedDate = date);
-  }
-
   @override
   void initState() {
     super.initState();
@@ -80,25 +64,22 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              // Date Selector
+              // Date Display (Non-interactive)
               Center(
-                child: GestureDetector(
-                  onTap: _pickDate,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: purple),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.calendar_today, size: 18, color: Colors.black87),
-                        const SizedBox(width: 10),
-                        Text(formatDate(selectedDate),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                      ],
-                    ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: purple),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.calendar_today, size: 18, color: Colors.black87),
+                      const SizedBox(width: 10),
+                      Text(formatDate(DateTime.now()), // Always show current date
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                    ],
                   ),
                 ),
               ),
@@ -125,8 +106,6 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
               Row(
                 children: [
                   Expanded(child: _bottomButton("Previous", purple, () => Navigator.pop(context, false))),
-                  const SizedBox(width: 10),
-                  Expanded(child: _bottomButton("Draft", Colors.grey.shade600, () {})),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _bottomButton("Next", purple, () {
