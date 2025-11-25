@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'scan_sample.dart';
-import 'labour_cost.dart'; // Add this import for navigation back to Labour cost
+import 'labour_cost.dart';
 
 class SampleResultPage extends StatefulWidget {
   const SampleResultPage({super.key, required Map<String, Object> scanData});
@@ -14,11 +14,41 @@ class _SampleResultPageState extends State<SampleResultPage> {
   final Color purple = const Color(0xFF2D108E);
   final Color grey = const Color(0xFFBDBDBD);
 
-  // ✅ Make sure this method is inside the class, not outside
-  String getCurrentDate() {
-    final now = DateTime.now();
-    return "${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}";
-  }
+  // DUMMY DATA - All collected information
+  final Map<String, dynamic> pesticideData = {
+    'brand': 'ABCDE',
+    'price': 100.0,
+    'sprayPumps': 2.0,
+    'rate': 3.0,
+    'totalCost': 600.0,
+  };
+
+  final Map<String, dynamic> labourData = {
+    'dailyLabourCost': 200.0,
+    'farmArea': 2.0,
+    'workCost': 100.0,
+    'beansPrice': 150.0,
+    'beansProductivity': 160.0,
+    'kValue': 0.8,
+  };
+
+  // DUMMY DATA - Sample history (Sample 2 at top, Sample 1 at bottom)
+  final List<Map<String, dynamic>> sampleHistory = [
+    {
+      'sampleNumber': 2,
+      'cumulativeEggs': 8,
+      'average': 1.60,
+      'decision': 'TREAT',
+      'decisionColor': Colors.red,
+    },
+    {
+      'sampleNumber': 1,
+      'cumulativeEggs': 7,
+      'average': 1.40,
+      'decision': 'Continue taking sample',
+      'decisionColor': Colors.green,
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +71,7 @@ class _SampleResultPageState extends State<SampleResultPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              // ✅ Auto Date (current date)
+              // Date Display
               Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
@@ -56,7 +86,7 @@ class _SampleResultPageState extends State<SampleResultPage> {
                       const Icon(Icons.calendar_today_outlined, size: 16, color: Colors.black),
                       const SizedBox(width: 8),
                       Text(
-                        DateFormat('dd MMM yyyy').format(DateTime.now()), // Example: 12 Nov 2025
+                        DateFormat('dd MMM yyyy').format(DateTime.now()),
                         style: const TextStyle(
                           fontSize: 15,
                           color: Colors.black,
@@ -70,64 +100,99 @@ class _SampleResultPageState extends State<SampleResultPage> {
 
               const SizedBox(height: 16),
 
-              // Information Card
+              // Information Card with DUMMY DATA
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: const Padding(
-                  padding: EdgeInsets.all(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _SectionTitle("🧴 Pesticide Information"),
-                      _ItemText("Pesticide Type:", "-"),
-                      _ItemText("Total Pesticide Cost (RM):", "-"),
-                      _ItemText("Pesticide Price (per Liter):", "-"),
-                      _ItemText("Pesticide Rate per Spray Pump (L):", "-"),
+                      const _SectionTitle("🧪 Pesticide Cost"),
+                      _ItemText("Brand of Pesticide:", pesticideData['brand']),
+                      _ItemText("Price of Pesticide (RM/L):", pesticideData['price'].toStringAsFixed(0)),
+                      _ItemText("Number of Spray Pump Required (/H):", pesticideData['sprayPumps'].toStringAsFixed(0)),
+                      _ItemText("Pesticide Rate per Spray Pump (L):", pesticideData['rate'].toStringAsFixed(0)),
+                      _ItemText("Pesticide Cost (RM):", pesticideData['totalCost'].toStringAsFixed(0)),
 
-                      SizedBox(height: 12),
-                      _SectionTitle("👷 Labour"),
-                      _ItemText("Daily Labour Cost (RM):", "-"),
-                      _ItemText("Farm Area Sprayed per Day (Hectare):", "-"),
+                      const SizedBox(height: 12),
+                      const _SectionTitle("👨‍🌾 Daily Labour Cost"),
+                      _ItemText("Daily Labour Cost (RM):", labourData['dailyLabourCost'].toStringAsFixed(0)),
+                      _ItemText("Farm Area Sprayed per Day (H):", labourData['farmArea'].toStringAsFixed(0)),
+                      _ItemText("Work Cost / Day (H):", labourData['workCost'].toStringAsFixed(0)),
+                      _ItemText("Wet Cocoa Bean Price (RM/kg):", labourData['beansPrice'].toStringAsFixed(0)),
+                      _ItemText("Wet Cocoa Bean Productivity (kg/H):", labourData['beansProductivity'].toStringAsFixed(0)),
+                      _ItemText("K (Proportionate Reduction In Injury):", labourData['kValue'].toStringAsFixed(1)),
 
-                      SizedBox(height: 12),
-                      _SectionTitle("🌱 Crop and Productivity"),
-                      _ItemText("Wet Cocoa Bean Price (RM/kg):", "-"),
-                      _ItemText("Wet Cocoa Bean Productivity (kg/Hectare):", "-"),
-
-                      SizedBox(height: 12),
-                      _SectionTitle("📅 Pesticide Application Frequency"),
-                      _ItemText("Frequency of Pesticide Use per Year:", "-"),
-
-                      SizedBox(height: 12),
-                      _SectionTitle("📊 Economic Indicators"),
-                      _ItemText("Economic Injury Level (EIL):", "-"),
-                      _ItemText("Constant (K):", "-"),
-
-                      SizedBox(height: 12),
-                      _SectionTitle("🥚 Sampling Data"),
-                      _ItemText("Total Samples Collected:", "-"),
-                      _ItemText("Cumulative Number of CPB Eggs:", "-"),
-
-                      SizedBox(height: 12),
-                      _SectionTitle("✅ Decision"),
-                      _ItemText("Action:", "-"),
                     ],
                   ),
                 ),
               ),
 
+              // Sample History Cards
+              ...sampleHistory.map((sample) {
+                return Card(
+                  margin: const EdgeInsets.only(top: 8),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Sample ${sample['sampleNumber']}",
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              sample['decision'], // SWITCHED: Decision text on left
+                              style: TextStyle(
+                                color: sample['decisionColor'],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              sample['cumulativeEggs'].toString(), // SWITCHED: Egg count on right
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              sample['average'].toStringAsFixed(2), // SWITCHED: Average on right
+                              style: TextStyle(
+                                color: sample['decisionColor'],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+
               const SizedBox(height: 30),
 
-              // Navigation Buttons - Updated to match Pesticide and Labour pages
+              // Navigation Buttons
               Row(
                 children: [
                   Expanded(
                     child: _bottomButton("Previous", purple, () {
-                      // Navigate back to Labour Cost page
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => const LabourCostPage()),
+                        MaterialPageRoute(builder: (context) => const ScanSamplePage()),
                       );
                     }),
                   ),
@@ -149,7 +214,7 @@ class _SampleResultPageState extends State<SampleResultPage> {
     );
   }
 
-  // Bottom button widget to match the style from other pages
+  // Bottom button widget
   Widget _bottomButton(String text, Color color, VoidCallback onTap) {
     return SizedBox(
       height: 45,
@@ -170,7 +235,7 @@ class _SampleResultPageState extends State<SampleResultPage> {
   }
 }
 
-// --- Small helper widgets for cleaner code ---
+// Helper widgets
 class _SectionTitle extends StatelessWidget {
   final String title;
   const _SectionTitle(this.title);

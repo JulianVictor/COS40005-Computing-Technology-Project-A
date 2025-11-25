@@ -22,7 +22,7 @@ class _ScanSamplePageState extends State<ScanSamplePage> {
   late int sampleNumber;
   double average = 0;
   int cumulative = 0;
-  double eil = 11.59;
+  double eil = 1.50;
 
   // Each pod now holds List of images and total egg count
   final List<List<File>> _podImages = List.generate(5, (_) => <File>[]);

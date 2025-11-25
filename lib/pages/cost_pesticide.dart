@@ -21,6 +21,14 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
 
   String formatDate(DateTime date) => DateFormat("dd MMM yyyy").format(date);
 
+// DUMMY DATA - Pre-filled values for testing
+  final Map<String, dynamic> dummyData = {
+    'brand': 'ABCDE',
+    'price': 100.0,
+    'sprayPumps': 2.0,
+    'rate': 3.0,
+  };
+
   void _calculateCost() {
     double price = double.tryParse(priceController.text) ?? 0;
     double pumps = double.tryParse(sprayPumpController.text) ?? 0;
@@ -34,11 +42,20 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
   @override
   void initState() {
     super.initState();
+
+    // DUMMY DATA: Pre-fill the text fields with dummy values
+    brandController.text = dummyData['brand'];
+    priceController.text = dummyData['price'].toString();
+    sprayPumpController.text = dummyData['sprayPumps'].toString();
+    rateController.text = dummyData['rate'].toString();
+
+    // Calculate initial cost based on dummy data
+    pesticideCost = dummyData['price'] * dummyData['sprayPumps'] * dummyData['rate'];
+
     priceController.addListener(_calculateCost);
     sprayPumpController.addListener(_calculateCost);
     rateController.addListener(_calculateCost);
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

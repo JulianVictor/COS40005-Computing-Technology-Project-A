@@ -22,6 +22,41 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
 
   String formatDate(DateTime date) => DateFormat("dd MMM yyyy").format(date);
 
+  // DUMMY DATA - Pre-filled values for testing
+  final Map<String, dynamic> dummyData = {
+    'dailyLabourCost': 200.0,
+    'farmArea': 2.0,
+    'beansPrice': 150.0,
+    'beansProductivity': 160.0,
+    'kValue': 0.8,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+
+    // DUMMY DATA: Pre-fill the text fields with dummy values
+    labourCostController.text = dummyData['dailyLabourCost'].toString();
+    farmAreaController.text = dummyData['farmArea'].toString();
+    beansPriceController.text = dummyData['beansPrice'].toString();
+    beansProductivityController.text = dummyData['beansProductivity'].toString();
+    kController.text = dummyData['kValue'].toString();
+
+    // Calculate initial work cost based on dummy data
+    _calculateWorkCost();
+
+    labourCostController.addListener(_calculateWorkCost);
+    farmAreaController.addListener(_calculateWorkCost);
+  }
+
+  void _calculateWorkCost() {
+    double labour = double.tryParse(labourCostController.text) ?? 0;
+    double area = double.tryParse(farmAreaController.text) ?? 1; // avoid divide by zero
+
+    double result = labour / area;
+    workCostController.text = result.isFinite ? result.toStringAsFixed(2) : "0.00";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,16 +203,6 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    labourCostController.addListener(_calculateWorkCost);
-    farmAreaController.addListener(_calculateWorkCost);
-
-    // Example default K value (set by admin later)
-    kController.text = "0.8";
-  }
-
   Widget _readOnlyField(TextEditingController controller) {
     return TextField(
       controller: controller,
@@ -197,13 +222,5 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
-  }
-
-  void _calculateWorkCost() {
-    double labour = double.tryParse(labourCostController.text) ?? 0;
-    double area = double.tryParse(farmAreaController.text) ?? 1; // avoid divide by zero
-
-    double result = labour / area;
-    workCostController.text = result.isFinite ? result.toStringAsFixed(2) : "0.00";
   }
 }
