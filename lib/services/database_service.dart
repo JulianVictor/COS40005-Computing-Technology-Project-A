@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/database_models.dart';
+import '../models/notification_model.dart';
 
 class DatabaseService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -10,9 +11,9 @@ class DatabaseService {
       final response = await _client
           .from('users')
           .select()
-          .eq('userId', userId)
+          .eq('userid', userId.toLowerCase())
           .single();
-      
+
       return AppUser.fromMap(response);
     } catch (e) {
       print('Error getting user: $e');
@@ -20,12 +21,71 @@ class DatabaseService {
     }
   }
 
-  Future<void> createUser(AppUser user) async {
+  Future<List<AppUser>> getAllUsers() async {
+    try {
+      final response = await _client
+          .from('users')
+          .select()
+          .order('createdat', ascending: false);
+
+      return (response as List<dynamic>)
+          .map((e) => AppUser.fromMap(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error getting all users: $e');
+      return [];
+    }
+  }
+
+  Future<bool> createUser(AppUser user) async {
     try {
       await _client.from('users').insert(user.toMap());
+      return true;
     } catch (e) {
       print('Error creating user: $e');
-      rethrow;
+      return false;
+    }
+  }
+
+  Future<bool> updateUserStatus(String userId, String newStatus) async {
+    try {
+      await _client
+          .from('users')
+          .update({
+            'accountstatus': newStatus,
+            'updatedat': DateTime.now().toIso8601String(),
+          })
+          .eq('userid', userId.toLowerCase());
+      return true;
+    } catch (e) {
+      print('Error updating user status: $e');
+      return false;
+    }
+  }
+
+  Future<bool> updateUserRole(String userId, String newRole) async {
+    try {
+      await _client
+          .from('users')
+          .update({
+            'role': newRole,
+            'updatedat': DateTime.now().toIso8601String(),
+          })
+          .eq('userid', userId.toLowerCase());
+      return true;
+    } catch (e) {
+      print('Error updating user role: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteUser(String userId) async {
+    try {
+      await _client.from('users').delete().eq('userid', userId.toLowerCase());
+      return true;
+    } catch (e) {
+      print('Error deleting user: $e');
+      return false;
     }
   }
 
@@ -35,33 +95,387 @@ class DatabaseService {
       final response = await _client
           .from('farms')
           .select()
-          .eq('ownerId', userId);
-      
-      return (response as List).map((e) => Farm.fromMap(e)).toList();
+          .eq('ownerid', userId.toLowerCase());
+
+      return (response as List<dynamic>)
+          .map((e) => Farm.fromMap(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       print('Error getting farms: $e');
       return [];
     }
   }
 
-  Future<void> createFarm(Farm farm) async {
+  Future<bool> createFarm(Farm farm) async {
     try {
       await _client.from('farms').insert(farm.toMap());
+      return true;
     } catch (e) {
       print('Error creating farm: $e');
-      rethrow;
+      return false;
+    }
+  }
+
+  Future<List<Farm>> getAllFarms() async {
+    try {
+      final response = await _client
+          .from('farms')
+          .select()
+          .order('createdat', ascending: false);
+
+      return (response as List<dynamic>)
+          .map((e) => Farm.fromMap(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error getting all farms: $e');
+      return [];
+    }
+  }
+
+  Future<Farm?> getFarmById(String farmId) async {
+    try {
+      final response = await _client
+          .from('farms')
+          .select()
+          .eq('farmid', farmId.toLowerCase())
+          .single();
+
+      return Farm.fromMap(response);
+    } catch (e) {
+      print('Error getting farm by ID: $e');
+      return null;
+    }
+  }
+
+  Future<bool> updateFarmStatus(String farmId, bool isActive) async {
+    try {
+      await _client
+          .from('farms')
+          .update({
+            'isactive': isActive,
+            'updatedat': DateTime.now().toIso8601String(),
+          })
+          .eq('farmid', farmId.toLowerCase());
+      return true;
+    } catch (e) {
+      print('Error updating farm status: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteFarm(String farmId) async {
+    try {
+      await _client.from('farms').delete().eq('farmid', farmId.toLowerCase());
+      return true;
+    } catch (e) {
+      print('Error deleting farm: $e');
+      return false;
     }
   }
 
   // Scan Operations
-  Future<void> createScan(Map<String, dynamic> scanData) async {
+  Future<bool> createScan(Map<String, dynamic> scanData) async {
     try {
       await _client.from('scans').insert(scanData);
+      return true;
     } catch (e) {
       print('Error creating scan: $e');
-      rethrow;
+      return false;
     }
   }
 
-  // Add other methods as needed...
+  Future<List<Scan>> getFarmScans(String farmId) async {
+    try {
+      final response = await _client
+          .from('scans')
+          .select()
+          .eq('farmid', farmId.toLowerCase())
+          .order('scandate', ascending: false);
+
+      return (response as List<dynamic>)
+          .map((e) => Scan.fromMap(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error getting farm scans: $e');
+      return [];
+    }
+  }
+
+  Future<List<Scan>> getAllScans() async {
+    try {
+      final response = await _client
+          .from('scans')
+          .select()
+          .order('scandate', ascending: false);
+
+      return (response as List<dynamic>)
+          .map((e) => Scan.fromMap(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error getting all scans: $e');
+      return [];
+    }
+  }
+
+  // Yield Management Methods
+  Future<List<YieldRecord>> getAllYieldRecords() async {
+    try {
+      final response = await _client
+          .from('yield_records')
+          .select()
+          .order('harvestdate', ascending: false);
+
+      return (response as List<dynamic>)
+          .map((e) => YieldRecord.fromMap(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error getting all yield records: $e');
+      return [];
+    }
+  }
+
+  Future<bool> deleteYieldRecord(String recordId) async {
+    try {
+      await _client
+          .from('yield_records')
+          .delete()
+          .eq('recordid', recordId.toLowerCase());
+      return true;
+    } catch (e) {
+      print('Error deleting yield record: $e');
+      return false;
+    }
+  }
+
+  // User method for yield management
+  Future<AppUser?> getUserById(String userId) async {
+    try {
+      final response = await _client
+          .from('users')
+          .select()
+          .eq('userid', userId.toLowerCase())
+          .single();
+
+      return AppUser.fromMap(response);
+    } catch (e) {
+      print('Error getting user by ID: $e');
+      return null;
+    }
+  }
+
+  // Scan Session Operations
+  Future<List<ScanSession>> getAllScanSessions() async {
+    try {
+      final response = await _client
+          .from('scan_sessions')
+          .select()
+          .order('sessiondate', ascending: false);
+
+      return (response as List<dynamic>)
+          .map((e) => ScanSession.fromMap(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error getting all scan sessions: $e');
+      return [];
+    }
+  }
+
+  // Dashboard statistics methods
+  Future<Map<String, dynamic>> getDashboardStats() async {
+    try {
+      // Get total users count
+      final usersResponse = await _client
+          .from('users')
+          .select()
+          .count(CountOption.exact);
+
+      // Get total farms count
+      final farmsResponse = await _client
+          .from('farms')
+          .select()
+          .count(CountOption.exact);
+
+      // Get total scans count
+      final scansResponse = await _client
+          .from('scans')
+          .select()
+          .count(CountOption.exact);
+
+      // Get active farms count
+      final activeFarmsResponse = await _client
+          .from('farms')
+          .select()
+          .eq('isactive', true)
+          .count(CountOption.exact);
+
+      // Get pending approval users count
+      final pendingUsersResponse = await _client
+          .from('users')
+          .select()
+          .eq('accountstatus', 'pending_approved')
+          .count(CountOption.exact);
+
+      return {
+        'totalUsers': usersResponse.count ?? 0,
+        'totalFarms': farmsResponse.count ?? 0,
+        'totalScans': scansResponse.count ?? 0,
+        'activeFarms': activeFarmsResponse.count ?? 0,
+        'pendingUsers': pendingUsersResponse.count ?? 0,
+      };
+    } catch (e) {
+      print('Error getting dashboard stats: $e');
+      return {
+        'totalUsers': 0,
+        'totalFarms': 0,
+        'totalScans': 0,
+        'activeFarms': 0,
+        'pendingUsers': 0,
+      };
+    }
+  }
+
+  // Get recent activity for dashboard
+  Future<List<Map<String, dynamic>>> getRecentActivity() async {
+    try {
+      // Get recent scans with user and farm info
+      final response = await _client
+          .from('scans')
+          .select('''
+          *,
+          users:farmerid(firstname, lastname),
+          farms:farmid(farmname)
+        ''')
+          .order('scandate', ascending: false)
+          .limit(10);
+
+      return (response as List<dynamic>).map((scan) {
+        final scanMap = scan as Map<String, dynamic>;
+        final userData = scanMap['users'] as Map<String, dynamic>?;
+        final farmData = scanMap['farms'] as Map<String, dynamic>?;
+
+        return {
+          'scan': Scan.fromMap(scanMap),
+          'userName': userData != null
+              ? '${userData['firstname']} ${userData['lastname']}'
+              : 'Unknown User',
+          'farmName': farmData?['farmname'] ?? 'Unknown Farm',
+        };
+      }).toList();
+    } catch (e) {
+      print('Error getting recent activity: $e');
+      return [];
+    }
+  }
+
+  // Additional utility method to check connection
+  Future<bool> checkConnection() async {
+    try {
+      await _client.from('users').select().limit(1);
+      return true;
+    } catch (e) {
+      print('Database connection error: $e');
+      return false;
+    }
+  }
+
+  // Notification Operations
+  Future<List<AdminNotification>> getPendingApprovalNotifications() async {
+    try {
+      final response = await _client
+          .from('admin_notifications')
+          .select()
+          .eq('type', 'user_registration')
+          .eq('is_read', false)
+          .order('created_at', ascending: false);
+
+      return (response as List<dynamic>)
+          .map((e) => AdminNotification.fromMap(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error getting pending approval notifications: $e');
+      return [];
+    }
+  }
+
+  Future<List<AdminNotification>> getAllNotifications() async {
+    try {
+      final response = await _client
+          .from('admin_notifications')
+          .select()
+          .order('created_at', ascending: false)
+          .limit(50);
+
+      return (response as List<dynamic>)
+          .map((e) => AdminNotification.fromMap(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error getting all notifications: $e');
+      return [];
+    }
+  }
+
+  Future<bool> markNotificationAsRead(String notificationId) async {
+    try {
+      await _client
+          .from('admin_notifications')
+          .update({'is_read': true})
+          .eq('id', notificationId);
+
+      return true;
+    } catch (e) {
+      print('Error marking notification as read: $e');
+      return false;
+    }
+  }
+
+  Future<bool> markAllNotificationsAsRead() async {
+    try {
+      await _client
+          .from('admin_notifications')
+          .update({'is_read': true})
+          .eq('is_read', false);
+
+      return true;
+    } catch (e) {
+      print('Error marking all notifications as read: $e');
+      return false;
+    }
+  }
+
+  Future<int> getUnreadNotificationCount() async {
+    try {
+      final response = await _client
+          .from('admin_notifications')
+          .select()
+          .eq('is_read', false)
+          .count(CountOption.exact);
+
+      return response.count ?? 0;
+    } catch (e) {
+      print('Error getting unread notification count: $e');
+      return 0;
+    }
+  }
+
+  // Method to create notification when user registers
+  Future<bool> createUserRegistrationNotification(AppUser user) async {
+    try {
+      final notification = {
+        'title': 'New User Registration',
+        'message':
+            '${user.firstName} ${user.lastName} has registered and is pending approval',
+        'user_id': user.userId,
+        'user_email': user.email,
+        'type': 'user_registration',
+        'is_read': false,
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      await _client.from('admin_notifications').insert(notification);
+      return true;
+    } catch (e) {
+      print('Error creating user registration notification: $e');
+      return false;
+    }
+  }
 }

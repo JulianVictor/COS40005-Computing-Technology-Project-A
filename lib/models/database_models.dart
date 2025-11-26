@@ -1,6 +1,43 @@
 import 'dart:convert';
 
-// User Model
+// Add these enums to your database_models.dart file
+enum UserRole {
+  farmer,
+  admin,
+}
+
+enum AccountStatus {
+  pending_verification,
+  pending_approved,
+  approved,
+}
+
+// Extension methods for better display
+extension UserRoleExtension on UserRole {
+  String get displayName {
+    switch (this) {
+      case UserRole.farmer:
+        return 'Farmer';
+      case UserRole.admin:
+        return 'Admin';
+    }
+  }
+}
+
+extension AccountStatusExtension on AccountStatus {
+  String get displayName {
+    switch (this) {
+      case AccountStatus.pending_verification:
+        return 'Pending Verification';
+      case AccountStatus.pending_approved:
+        return 'Pending Approval';
+      case AccountStatus.approved:
+        return 'Approved';
+    }
+  }
+}
+
+// User Model - Updated for camelCase
 class AppUser {
   final String userId;
   final String firstName;
@@ -30,35 +67,39 @@ class AppUser {
 
   factory AppUser.fromMap(Map<String, dynamic> map) {
     return AppUser(
-      userId: map['userId'] as String,
-      firstName: map['firstName'] as String,
-      lastName: map['lastName'] as String,
-      email: map['email'] as String,
-      phoneNumber: map['phoneNumber'] as String?,
-      role: map['role'] as String,
-      accountStatus: map['accountStatus'] as String,
+      userId: map['userid']?.toString() ?? '',
+      firstName: map['firstname']?.toString() ?? '',
+      lastName: map['lastname']?.toString() ?? '',
+      email: map['email']?.toString() ?? '',
+      phoneNumber: map['phonenumber']?.toString(),
+      role: map['role']?.toString() ?? 'farmer',
+      accountStatus: map['accountstatus']?.toString() ?? 'pending_verification',
       farms: List<String>.from(map['farms'] ?? []),
-      createdAt: DateTime.parse(map['createdAt'] as String),
-      updatedAt: DateTime.parse(map['updatedAt'] as String),
-      lastLoginAt: map['lastLoginAt'] != null 
-          ? DateTime.parse(map['lastLoginAt'] as String) 
+      createdAt: map['createdat'] != null 
+          ? DateTime.parse(map['createdat'].toString()) 
+          : DateTime.now(),
+      updatedAt: map['updatedat'] != null 
+          ? DateTime.parse(map['updatedat'].toString()) 
+          : DateTime.now(),
+      lastLoginAt: map['lastloginat'] != null 
+          ? DateTime.parse(map['lastloginat'].toString()) 
           : null,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'userId': userId,
-      'firstName': firstName,
-      'lastName': lastName,
+      'userid': userId, 
+      'firstname': firstName, 
+      'lastname': lastName, 
       'email': email,
-      'phoneNumber': phoneNumber,
+      'phonenumber': phoneNumber, 
       'role': role,
-      'accountStatus': accountStatus,
+      'accountstatus': accountStatus,
       'farms': farms,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-      'lastLoginAt': lastLoginAt?.toIso8601String(),
+      'createdat': createdAt.toIso8601String(), 
+      'updatedat': updatedAt.toIso8601String(), 
+      'lastloginat': lastLoginAt?.toIso8601String(), 
     };
   }
 }
@@ -95,35 +136,39 @@ class Farm {
 
   factory Farm.fromMap(Map<String, dynamic> map) {
     return Farm(
-      farmId: map['farmId'] as String,
-      ownerId: map['ownerId'] as String,
-      farmName: map['farmName'] as String,
-      state: map['state'] as String,
-      district: map['district'] as String,
-      village: map['village'] as String,
-      postcode: map['postcode'] as String,
-      areaHectares: (map['areaHectares'] as num).toDouble(),
-      treeCount: map['treeCount'] as int,
-      createdAt: DateTime.parse(map['createdAt'] as String),
-      updatedAt: DateTime.parse(map['updatedAt'] as String),
-      isActive: map['isActive'] as bool,
+      farmId: map['farmid']?.toString() ?? '', 
+      ownerId: map['ownerid']?.toString() ?? '', 
+      farmName: map['farmname']?.toString() ?? '', 
+      state: map['state']?.toString() ?? '',
+      district: map['district']?.toString() ?? '',
+      village: map['village']?.toString() ?? '',
+      postcode: map['postcode']?.toString() ?? '',
+      areaHectares: (map['areahectares'] as num?)?.toDouble() ?? 0.0, 
+      treeCount: (map['treecount'] as num?)?.toInt() ?? 0, 
+      createdAt: map['createdat'] != null 
+          ? DateTime.parse(map['createdat'].toString()) 
+          : DateTime.now(),
+      updatedAt: map['updatedat'] != null 
+          ? DateTime.parse(map['updatedat'].toString()) 
+          : DateTime.now(),
+      isActive: map['isactive'] as bool? ?? true,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'farmId': farmId,
-      'ownerId': ownerId,
-      'farmName': farmName,
+      'farmid': farmId,
+      'ownerid': ownerId,
+      'farmname': farmName,
       'state': state,
       'district': district,
       'village': village,
       'postcode': postcode,
-      'areaHectares': areaHectares,
-      'treeCount': treeCount,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-      'isActive': isActive,
+      'areahectares': areaHectares, 
+      'treecount': treeCount, 
+      'createdat': createdAt.toIso8601String(), 
+      'updatedat': updatedAt.toIso8601String(), 
+      'isactive': isActive, 
     };
   }
 }
@@ -154,31 +199,33 @@ class Scan {
 
   factory Scan.fromMap(Map<String, dynamic> map) {
     return Scan(
-      scanId: map['scanId'] as String,
-      farmerId: map['farmerId'] as String,
-      farmId: map['farmId'] as String,
-      imageUrl: map['imageUrl'] as String,
-      imagePath: map['imagePath'] as String,
-      eggsDetected: map['eggsDetected'] as int,
-      confidenceScore: (map['confidenceScore'] as num).toDouble(),
-      scanDate: DateTime.parse(map['scanDate'] as String),
-      gpsLocation: map['gpsLocation'] != null 
-          ? GpsLocation.fromMap(map['gpsLocation'] as Map<String, dynamic>)
+      scanId: map['scanid']?.toString() ?? '', 
+      farmerId: map['farmerid']?.toString() ?? '', 
+      farmId: map['farmid']?.toString() ?? '', 
+      imageUrl: map['imageurl']?.toString() ?? '', 
+      imagePath: map['imagepath']?.toString() ?? '', 
+      eggsDetected: (map['eggsdetected'] as num?)?.toInt() ?? 0,
+      confidenceScore: (map['confidencescore'] as num?)?.toDouble() ?? 0.0,
+      scanDate: map['scandate'] != null
+          ? DateTime.parse(map['scandate'].toString()) 
+          : DateTime.now(),
+      gpsLocation: map['gpslocation'] != null
+          ? GpsLocation.fromMap(Map<String, dynamic>.from(map['gpslocation'] as Map))
           : null,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'scanId': scanId,
-      'farmerId': farmerId,
-      'farmId': farmId,
-      'imageUrl': imageUrl,
-      'imagePath': imagePath,
-      'eggsDetected': eggsDetected,
-      'confidenceScore': confidenceScore,
-      'scanDate': scanDate.toIso8601String(),
-      'gpsLocation': gpsLocation?.toMap(),
+      'scanid': scanId, 
+      'farmerid': farmerId, 
+      'farmid': farmId, 
+      'imageurl': imageUrl, 
+      'imagepath': imagePath, 
+      'eggsdetected': eggsDetected, 
+      'confidencescore': confidenceScore, 
+      'scandate': scanDate.toIso8601String(), 
+      'gpslocation': gpsLocation?.toMap(), 
     };
   }
 }
@@ -234,32 +281,34 @@ class ScanSession {
 
   factory ScanSession.fromMap(Map<String, dynamic> map) {
     return ScanSession(
-      sessionId: map['sessionId'] as String,
-      farmerId: map['farmerId'] as String,
-      farmId: map['farmId'] as String,
+      sessionId: map['sessionid']?.toString() ?? '', 
+      farmerId: map['farmerid']?.toString() ?? '', 
+      farmId: map['farmid']?.toString() ?? '', 
       samples: List<String>.from(map['samples'] ?? []),
-      totalEggs: map['totalEggs'] as int,
-      averageEggs: (map['averageEggs'] as num).toDouble(),
-      cumulativeEggs: map['cumulativeEggs'] as int,
-      finalDecision: map['finalDecision'] as String,
-      recommendationReason: map['recommendationReason'] as String?,
-      sessionDate: DateTime.parse(map['sessionDate'] as String),
-      completed: map['completed'] as bool,
+      totalEggs: (map['totaleggs'] as num?)?.toInt() ?? 0,
+      averageEggs: (map['averageeggs'] as num?)?.toDouble() ?? 0.0, 
+      cumulativeEggs: (map['cumulativeeggs'] as num?)?.toInt() ?? 0, 
+      finalDecision: map['finaldecision']?.toString() ?? 'continue_sampling', 
+      recommendationReason: map['recommendationreason']?.toString(), 
+      sessionDate: map['sessiondate'] != null 
+          ? DateTime.parse(map['sessiondate'].toString()) 
+          : DateTime.now(),
+      completed: map['completed'] as bool? ?? false,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'sessionId': sessionId,
-      'farmerId': farmerId,
-      'farmId': farmId,
+      'sessionid': sessionId, 
+      'farmerid': farmerId, 
+      'farmid': farmId, 
       'samples': samples,
-      'totalEggs': totalEggs,
-      'averageEggs': averageEggs,
-      'cumulativeEggs': cumulativeEggs,
-      'finalDecision': finalDecision,
-      'recommendationReason': recommendationReason,
-      'sessionDate': sessionDate.toIso8601String(),
+      'totaleggs': totalEggs,
+      'averageeggs': averageEggs,
+      'cumulativeeggs': cumulativeEggs,
+      'finaldecision': finalDecision,
+      'recommendationreason': recommendationReason, 
+      'sessiondate': sessionDate.toIso8601String(), 
       'completed': completed,
     };
   }
@@ -297,35 +346,35 @@ class EconomicSettings {
 
   factory EconomicSettings.fromMap(Map<String, dynamic> map) {
     return EconomicSettings(
-      settingId: map['settingId'] as String,
-      pesticideCostPerLiter: (map['pesticideCostPerLiter'] as num).toDouble(),
-      workCostPerDay: (map['workCostPerDay'] as num).toDouble(),
-      wetCocoaBeanPricePerKg: (map['wetCocoaBeanPricePerKg'] as num).toDouble(),
-      expectedYieldPerHectare: (map['expectedYieldPerHectare'] as num).toDouble(),
-      sprayThreshold: (map['sprayThreshold'] as num).toDouble(),
-      monitorThreshold: (map['monitorThreshold'] as num).toDouble(),
-      effectiveFrom: DateTime.parse(map['effectiveFrom'] as String),
-      effectiveTo: DateTime.parse(map['effectiveTo'] as String),
-      isActive: map['isActive'] as bool,
-      createdBy: map['createdBy'] as String,
-      createdAt: DateTime.parse(map['createdAt'] as String),
+      settingId: map['settingid'] as String,
+      pesticideCostPerLiter: (map['pesticidecostperliter'] as num).toDouble(), 
+      workCostPerDay: (map['workcostperday'] as num).toDouble(), 
+      wetCocoaBeanPricePerKg: (map['wetcocoabeanpriceperkg'] as num).toDouble(), 
+      expectedYieldPerHectare: (map['expectedyieldperhectare'] as num).toDouble(), 
+      sprayThreshold: (map['spraythreshold'] as num).toDouble(), 
+      monitorThreshold: (map['monitorthreshold'] as num).toDouble(), 
+      effectiveFrom: DateTime.parse(map['effectivefrom'] as String), 
+      effectiveTo: DateTime.parse(map['effectiveto'] as String), 
+      isActive: map['isactive'] as bool,  
+      createdBy: map['createdby'] as String,  
+      createdAt: DateTime.parse(map['createdat'] as String),  
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'settingId': settingId,
-      'pesticideCostPerLiter': pesticideCostPerLiter,
-      'workCostPerDay': workCostPerDay,
-      'wetCocoaBeanPricePerKg': wetCocoaBeanPricePerKg,
-      'expectedYieldPerHectare': expectedYieldPerHectare,
-      'sprayThreshold': sprayThreshold,
-      'monitorThreshold': monitorThreshold,
-      'effectiveFrom': effectiveFrom.toIso8601String(),
-      'effectiveTo': effectiveTo.toIso8601String(),
-      'isActive': isActive,
-      'createdBy': createdBy,
-      'createdAt': createdAt.toIso8601String(),
+      'settingid': settingId,
+      'pesticidecostperliter': pesticideCostPerLiter, 
+      'workcostperday': workCostPerDay, 
+      'wetcocoabeanpriceperkg': wetCocoaBeanPricePerKg, 
+      'expectedyieldperhectare': expectedYieldPerHectare, 
+      'spraythreshold': sprayThreshold, 
+      'monitorthreshold': monitorThreshold, 
+      'effectivefrom': effectiveFrom.toIso8601String(), 
+      'effectiveto': effectiveTo.toIso8601String(), 
+      'isactive': isActive,
+      'createdby': createdBy,  
+      'createdat': createdAt.toIso8601String(),  
     };
   }
 }
@@ -553,34 +602,41 @@ class YieldRecord {
 
   factory YieldRecord.fromMap(Map<String, dynamic> map) {
     return YieldRecord(
-      recordId: map['recordId'] as String,
-      farmerId: map['farmerId'] as String,
-      farmId: map['farmId'] as String,
-      harvestDate: DateTime.parse(map['harvestDate'] as String),
-      beanType: map['beanType'] as String,
-      beanGrade: map['beanGrade'] as String,
-      quantityKg: (map['quantityKg'] as num).toDouble(),
-      salesRevenue: map['salesRevenue'] != null ? (map['salesRevenue'] as num).toDouble() : null,
-      remarks: map['remarks'] as String?,
-      createdAt: DateTime.parse(map['createdAt'] as String),
+      recordId: map['recordid']?.toString() ?? '',  
+      farmerId: map['farmerid']?.toString() ?? '',  
+      farmId: map['farmid']?.toString() ?? '',  
+      harvestDate: map['harvestdate'] != null  
+          ? DateTime.parse(map['harvestdate'].toString()) 
+          : DateTime.now(),
+      beanType: map['beantype']?.toString() ?? 'wet',  
+      beanGrade: map['beangrade']?.toString() ?? 'A',  
+      quantityKg: (map['quantitykg'] as num?)?.toDouble() ?? 0.0,  
+      salesRevenue: map['salesrevenue'] != null  
+          ? (map['salesrevenue'] as num).toDouble() 
+          : null,
+      remarks: map['remarks']?.toString(),
+      createdAt: map['createdat'] != null  
+          ? DateTime.parse(map['createdat'].toString()) 
+          : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'recordId': recordId,
-      'farmerId': farmerId,
-      'farmId': farmId,
-      'harvestDate': harvestDate.toIso8601String(),
-      'beanType': beanType,
-      'beanGrade': beanGrade,
-      'quantityKg': quantityKg,
-      'salesRevenue': salesRevenue,
+      'recordid': recordId,  
+      'farmerid': farmerId,  
+      'farmid': farmId,  
+      'harvestdate': harvestDate.toIso8601String(),  
+      'beantype': beanType,  
+      'beangrade': beanGrade,  
+      'quantitykg': quantityKg,  
+      'salesrevenue': salesRevenue,  
       'remarks': remarks,
-      'createdAt': createdAt.toIso8601String(),
+      'createdat': createdAt.toIso8601String(),  
     };
   }
 }
+
 
 // System Metrics Model
 class SystemMetrics {
@@ -648,3 +704,4 @@ class SystemMetrics {
     };
   }
 }
+

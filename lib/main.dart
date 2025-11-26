@@ -1,24 +1,37 @@
+// main.dart
 import 'package:flutter/material.dart';
-import 'services/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'pages/admin_panel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  await SupabaseService.initialize();
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
   
-  runApp(MyApp());
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: dotenv.get('SUPABASE_URL'),
+    anonKey: dotenv.get('SUPABASE_ANON_KEY'),
+  );
+  
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Cocoa Farm App',
+      title: 'Cocoa Admin Panel',
       theme: ThemeData(
-        primarySwatch: Colors.green,
-        scaffoldBackgroundColor: Colors.white,
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.grey[50],
       ),
-      home: WelcomePage(),
+      home: const AdminPanel(),
       debugShowCheckedModeBanner: false,
     );
   }
