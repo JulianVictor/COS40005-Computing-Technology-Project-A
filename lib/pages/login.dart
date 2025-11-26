@@ -55,10 +55,11 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
 
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                 // Logo
                 Image.asset(
                   'lib/assets/images/login.png',
@@ -195,6 +196,7 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
           ),
+          )
         ],
         ),
       ),
@@ -202,6 +204,7 @@ class _LoginPageState extends State<LoginPage> {
     ));
 
   }
+
 
   void _handleLogin() async {
     final input = _emailOrPhoneController.text.trim();
@@ -239,7 +242,7 @@ class _LoginPageState extends State<LoginPage> {
         print('Email user data: $userData');
 
         if (userData != null && userData['accountstatus'] != 'approved') {
-          _showError('Account pending admin approval. Please wait for approval.');
+          _showWarning('Account pending admin approval. Please wait for approval.');
           setState(() { _isLoading = false; });
           return;
         }
@@ -250,7 +253,7 @@ class _LoginPageState extends State<LoginPage> {
         // Add country code if missing (since registration saves with +60)
         String phoneToSearch = phone;
         if (!phone.startsWith('+')) {
-          phoneToSearch = '+60$phone'; // Add Malaysia country code
+          phoneToSearch = '+60$phone';
         }
 
         print('Searching for phone: $phoneToSearch');
@@ -268,7 +271,7 @@ class _LoginPageState extends State<LoginPage> {
 
           // ✅ UPDATED: Only allow login if status is 'approved'
           if (userData['accountstatus'] != 'approved') {
-            _showError('Account pending admin approval. Please wait for approval.');
+            _showWarning('Account pending admin approval. Please wait for approval.');
             setState(() { _isLoading = false; });
             return;
           }
@@ -325,6 +328,26 @@ class _LoginPageState extends State<LoginPage> {
           borderRadius: BorderRadius.circular(12),
         ),
         duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showWarning(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.orange, // Different color for warnings
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 4), // Longer duration for important messages
       ),
     );
   }
