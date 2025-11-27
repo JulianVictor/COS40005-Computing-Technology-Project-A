@@ -1,20 +1,19 @@
 // pages/dashboard/stats_overview_card.dart
 import 'package:flutter/material.dart';
-import '../../services/database_service.dart';
+import '../../services/dashboard_service.dart';
 import '../../utils/responsive_utils.dart';
 
 class StatsOverviewCard extends StatelessWidget {
-  final DatabaseService databaseService;
-
+  final DashboardService dashboardService;
   const StatsOverviewCard({
     super.key,
-    required this.databaseService,
+    required this.dashboardService,
   });
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
-      future: databaseService.getDashboardStats(),
+      future: dashboardService.getDashboardStats(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

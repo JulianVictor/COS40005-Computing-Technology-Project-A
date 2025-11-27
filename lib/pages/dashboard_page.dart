@@ -1,6 +1,6 @@
 // pages/dashboard_page.dart
 import 'package:flutter/material.dart';
-import '../services/database_service.dart';
+import '../services/dashboard_service.dart';
 import '../utils/responsive_utils.dart';
 import 'dashboard/stats_overview_card.dart';
 import 'dashboard/analytics_chart_card.dart';
@@ -15,7 +15,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  final DatabaseService _databaseService = DatabaseService();
+  final DashboardService _dashboardService = DashboardService();
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class _DashboardPageState extends State<DashboardPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Stats Overview Cards
-          StatsOverviewCard(databaseService: _databaseService),
+          StatsOverviewCard(dashboardService: _dashboardService),
           const SizedBox(height: 24),
 
           // Analytics Line Chart

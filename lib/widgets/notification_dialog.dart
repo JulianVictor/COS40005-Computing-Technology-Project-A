@@ -1,7 +1,7 @@
 // widgets/notification_dialog.dart
 import 'package:flutter/material.dart';
 import '../models/notification_model.dart';
-import '../services/database_service.dart';
+import '../services/notification_service.dart';
 
 class NotificationDialog extends StatefulWidget {
   const NotificationDialog({super.key});
@@ -11,7 +11,7 @@ class NotificationDialog extends StatefulWidget {
 }
 
 class _NotificationDialogState extends State<NotificationDialog> {
-  final DatabaseService _databaseService = DatabaseService();
+  final NotificationService _notificationService = NotificationService();
   List<AdminNotification> _notifications = [];
   bool _isLoading = true;
   int _unreadCount = 0;
@@ -28,9 +28,10 @@ class _NotificationDialogState extends State<NotificationDialog> {
     });
 
     try {
-      final notifications = await _databaseService.getAllNotifications();
-      final unreadCount = await _databaseService.getUnreadNotificationCount();
-      
+      final notifications = await _notificationService.getAllNotifications();
+      final unreadCount = await _notificationService
+          .getUnreadNotificationCount();
+
       setState(() {
         _notifications = notifications;
         _unreadCount = unreadCount;
@@ -45,16 +46,86 @@ class _NotificationDialogState extends State<NotificationDialog> {
   }
 
   Future<void> _markAsRead(String notificationId) async {
-    await _databaseService.markNotificationAsRead(notificationId);
-    _loadNotifications(); // Reload to update counts
+  print('🔄 Marking notification $notificationId as read...');
+  final success = await _notificationService.markNotificationAsRead(notificationId);
+  
+  if (success) {
+    print('✅ Successfully marked notification as read in database');
+    // Create a new list with the updated notification
+    setState(() {
+      _notifications = _notifications.map((notification) {
+        if (notification.id == notificationId) {
+          // Create a new AdminNotification with isRead = true
+          return AdminNotification(
+            id: notification.id,
+            title: notification.title,
+            message: notification.message,
+            userId: notification.userId,
+            userEmail: notification.userEmail,
+            createdAt: notification.createdAt,
+            isRead: true, // Mark as read
+            type: notification.type,
+          );
+        }
+        return notification;
+      }).toList();
+      
+      // Update unread count
+      _unreadCount = _notifications.where((n) => !n.isRead).length;
+      print('📊 Updated unread count: $_unreadCount');
+    });
+  } else {
+    print('❌ Failed to mark notification as read in database');
+    // Show error message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Failed to mark notification as read'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 
-  Future<void> _markAllAsRead() async {
-    await _databaseService.markAllNotificationsAsRead();
-    _loadNotifications(); // Reload to update counts
+Future<void> _markAllAsRead() async {
+  print('🔄 Marking all notifications as read...');
+  final success = await _notificationService.markAllNotificationsAsRead();
+  
+  if (success) {
+    print('✅ Successfully marked all notifications as read in database');
+    // Update all notifications to read
+    setState(() {
+      _notifications = _notifications.map((notification) {
+        return AdminNotification(
+          id: notification.id,
+          title: notification.title,
+          message: notification.message,
+          userId: notification.userId,
+          userEmail: notification.userEmail,
+          createdAt: notification.createdAt,
+          isRead: true, // Mark all as read
+          type: notification.type,
+        );
+      }).toList();
+      
+      _unreadCount = 0;
+      print('📊 Updated unread count: $_unreadCount');
+    });
+  } else {
+    print('❌ Failed to mark all notifications as read in database');
+    // Show error message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Failed to mark all notifications as read'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 
-  void _handleNotificationTap(AdminNotification notification, BuildContext context) {
+  void _handleNotificationTap(
+    AdminNotification notification,
+    BuildContext context,
+  ) {
     // Mark as read when tapped
     _markAsRead(notification.id);
 
@@ -93,7 +164,9 @@ class _NotificationDialogState extends State<NotificationDialog> {
         title: Text(
           notification.title,
           style: TextStyle(
-            fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+            fontWeight: notification.isRead
+                ? FontWeight.normal
+                : FontWeight.bold,
             fontSize: 14,
           ),
         ),
@@ -109,10 +182,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
             const SizedBox(height: 4),
             Text(
               _formatTimeAgo(notification.createdAt),
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -169,7 +239,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
     if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
     if (difference.inHours < 24) return '${difference.inHours}h ago';
     if (difference.inDays < 7) return '${difference.inDays}d ago';
-    
+
     return '${date.day}/${date.month}/${date.year}';
   }
 
@@ -200,10 +270,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                   const SizedBox(width: 8),
                   const Text(
                     'Notifications',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const Spacer(),
                   if (_unreadCount > 0)
@@ -223,26 +290,30 @@ class _NotificationDialogState extends State<NotificationDialog> {
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _notifications.isEmpty
-                      ? const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.notifications_none, size: 64, color: Colors.grey),
-                              SizedBox(height: 16),
-                              Text(
-                                'No notifications',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.notifications_none,
+                            size: 64,
+                            color: Colors.grey,
                           ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _notifications.length,
-                          itemBuilder: (context, index) {
-                            return _buildNotificationItem(_notifications[index]);
-                          },
-                        ),
+                          SizedBox(height: 16),
+                          Text(
+                            'No notifications',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _notifications.length,
+                      itemBuilder: (context, index) {
+                        return _buildNotificationItem(_notifications[index]);
+                      },
+                    ),
             ),
 
             // Footer
@@ -260,10 +331,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                 children: [
                   Text(
                     '$_unreadCount unread',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                   const Spacer(),
                   TextButton(

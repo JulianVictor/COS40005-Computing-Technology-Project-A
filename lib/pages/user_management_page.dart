@@ -1,7 +1,8 @@
 // pages/user_management_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // ADD THIS IMPORT for Clipboard
 import '../models/database_models.dart';
-import '../services/database_service.dart';
+import '../services/user_service.dart';
 import '../utils/responsive_utils.dart';
 
 class UserManagementPage extends StatefulWidget {
@@ -12,7 +13,7 @@ class UserManagementPage extends StatefulWidget {
 }
 
 class _UserManagementPageState extends State<UserManagementPage> {
-  final DatabaseService _databaseService = DatabaseService();
+  final UserService _userService = UserService();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _headerSearchController = TextEditingController();
 
@@ -54,7 +55,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
     });
 
     try {
-      final users = await _databaseService.getAllUsers();
+      final users = await _userService.getAllUsers();
       if (mounted) {
         // Check again before setState
         setState(() {
@@ -142,9 +143,16 @@ class _UserManagementPageState extends State<UserManagementPage> {
     );
   }
 
+  // UPDATED: This method now includes the approval popup logic
   Future<void> _updateUserStatus(AppUser user, AccountStatus newStatus) async {
     try {
-      await _databaseService.updateUserStatus(user.userId, newStatus.name);
+      await _userService.updateUserStatus(user.userId, newStatus.name);
+      
+      // Show approval popup if status changed to approved
+      if (newStatus.name == 'approved') {
+        _showApprovalPopup(user);
+      }
+      
       _showSuccessSnackbar('User status updated successfully');
       _loadUsers(); // Refresh the list
     } catch (e) {
@@ -152,9 +160,96 @@ class _UserManagementPageState extends State<UserManagementPage> {
     }
   }
 
+  // NEW: Approval popup method
+  void _showApprovalPopup(AppUser user) {
+    final hasEmail = user.email != null && user.email!.isNotEmpty;
+    final phoneNumber = user.phoneNumber ?? 'N/A';
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Account Approved'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${user.firstName} ${user.lastName} ($phoneNumber) account has been approved.',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            if (hasEmail) ...[
+              const Text(
+                '✅ Approval email has been sent to the user.',
+                style: TextStyle(color: Colors.green),
+              ),
+              const SizedBox(height: 8),
+            ] else ...[
+              const Text(
+                'ℹ️ No email found for this user. Only WhatsApp notification available.',
+                style: TextStyle(color: Colors.orange),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'WhatsApp Message Template:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Dear ${user.firstName}, Your CPBAiVision App Account has been Approved.',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+          if (!hasEmail) 
+            ElevatedButton(
+              onPressed: () {
+                // Copy to clipboard
+                _copyToClipboard(
+                  'Dear ${user.firstName}, Your CPBAiVision App Account has been Approved.'
+                );
+                Navigator.of(context).pop();
+              },
+              child: const Text('Copy Message'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // NEW: Copy to clipboard method
+  void _copyToClipboard(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    _showSuccessSnackbar('Message copied to clipboard');
+  }
+
   Future<void> _updateUserRole(AppUser user, UserRole newRole) async {
     try {
-      await _databaseService.updateUserRole(user.userId, newRole.name);
+      await _userService.updateUserRole(user.userId, newRole.name);
       _showSuccessSnackbar('User role updated successfully');
       _loadUsers(); // Refresh the list
     } catch (e) {
@@ -185,7 +280,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
 
     if (confirmed == true) {
       try {
-        await _databaseService.deleteUser(user.userId);
+        await _userService.deleteUser(user.userId);
         _showSuccessSnackbar('User deleted successfully');
         _loadUsers(); // Refresh the list
       } catch (e) {
@@ -195,7 +290,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
   }
 
   void _showUserDetails(AppUser user) async {
-    final farms = await _databaseService.getUserFarms(user.userId);
+    final farms = await _userService.getUserFarms(user.userId);
 
     showDialog(
       context: context,

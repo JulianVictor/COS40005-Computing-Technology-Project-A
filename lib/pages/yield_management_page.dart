@@ -1,8 +1,9 @@
 // pages/yield_management_page.dart
 import 'package:flutter/material.dart';
 import '../models/database_models.dart';
-import '../services/database_service.dart';
+import '../services/yield_service.dart';
 import '../utils/responsive_utils.dart';
+
 
 class YieldManagementPage extends StatefulWidget {
   const YieldManagementPage({super.key});
@@ -12,7 +13,7 @@ class YieldManagementPage extends StatefulWidget {
 }
 
 class _YieldManagementPageState extends State<YieldManagementPage> {
-  final DatabaseService _databaseService = DatabaseService();
+  final YieldService _yieldService = YieldService();
   final TextEditingController _searchController = TextEditingController();
 
   List<YieldRecord> _yieldRecords = [];
@@ -41,7 +42,7 @@ class _YieldManagementPageState extends State<YieldManagementPage> {
     });
 
     try {
-      final records = await _databaseService.getAllYieldRecords();
+      final records = await _yieldService.getAllYieldRecords();
       if (mounted) {
         setState(() {
           _yieldRecords = records;
@@ -121,7 +122,7 @@ class _YieldManagementPageState extends State<YieldManagementPage> {
 
     if (confirmed == true) {
       try {
-        await _databaseService.deleteYieldRecord(record.recordId);
+        await _yieldService.deleteYieldRecord(record.recordId);
         _showSuccessSnackbar('Yield record deleted successfully');
         _loadYieldRecords(); // Refresh the list
       } catch (e) {
@@ -131,8 +132,8 @@ class _YieldManagementPageState extends State<YieldManagementPage> {
   }
 
   void _showRecordDetails(YieldRecord record) async {
-    final farmer = await _databaseService.getUserById(record.farmerId);
-    final farm = await _databaseService.getFarmById(record.farmId);
+    final farmer = await _yieldService.getUserById(record.farmerId);
+    final farm = await _yieldService.getFarmById(record.farmId);
 
     showDialog(
       context: context,

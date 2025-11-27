@@ -1,7 +1,7 @@
 // pages/farm_management_page.dart
 import 'package:flutter/material.dart';
 import '../models/database_models.dart';
-import '../services/database_service.dart';
+import '../services/farm_service.dart';
 import '../utils/responsive_utils.dart';
 
 class FarmManagementPage extends StatefulWidget {
@@ -12,7 +12,7 @@ class FarmManagementPage extends StatefulWidget {
 }
 
 class _FarmManagementPageState extends State<FarmManagementPage> {
-  final DatabaseService _databaseService = DatabaseService();
+  final FarmService _farmService = FarmService();
   final TextEditingController _searchController = TextEditingController();
 
   List<Farm> _farms = [];
@@ -44,7 +44,7 @@ class _FarmManagementPageState extends State<FarmManagementPage> {
     });
 
     try {
-      final farms = await _databaseService.getAllFarms();
+      final farms = await _farmService.getAllFarms();
       if (mounted) {
         setState(() {
           _farms = farms;
@@ -69,7 +69,7 @@ class _FarmManagementPageState extends State<FarmManagementPage> {
   Future<void> _loadFarmOwners(List<Farm> farms) async {
     for (final farm in farms) {
       try {
-        final owner = await _databaseService.getUserById(farm.ownerId);
+        final owner = await _farmService.getUserById(farm.ownerId);
         if (mounted) {
           setState(() {
             _farmOwners[farm.farmId] = owner;
@@ -131,7 +131,7 @@ class _FarmManagementPageState extends State<FarmManagementPage> {
 
   Future<void> _toggleFarmStatus(Farm farm) async {
     try {
-      await _databaseService.updateFarmStatus(farm.farmId, !farm.isActive);
+      await _farmService.updateFarmStatus(farm.farmId, !farm.isActive);
       _showSuccessSnackbar('Farm status updated successfully');
       _loadFarms(); // Refresh the list
     } catch (e) {
@@ -162,7 +162,7 @@ class _FarmManagementPageState extends State<FarmManagementPage> {
 
     if (confirmed == true) {
       try {
-        await _databaseService.deleteFarm(farm.farmId);
+        await _farmService.deleteFarm(farm.farmId);
         _showSuccessSnackbar('Farm deleted successfully');
         _loadFarms(); // Refresh the list
       } catch (e) {
@@ -172,8 +172,8 @@ class _FarmManagementPageState extends State<FarmManagementPage> {
   }
 
   void _showFarmDetails(Farm farm) async {
-    final owner = _farmOwners[farm.farmId] ?? await _databaseService.getUserById(farm.ownerId);
-    final scans = await _databaseService.getFarmScans(farm.farmId);
+    final owner = _farmOwners[farm.farmId] ?? await _farmService.getUserById(farm.ownerId);
+    final scans = await _farmService.getFarmScans(farm.farmId);
 
     showDialog(
       context: context,

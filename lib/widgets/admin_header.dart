@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/notification_dialog.dart';
-import '../services/database_service.dart';
+import '../services/notification_service.dart';
+import '../services/auth_manager.dart';
 
 class AdminHeader extends StatefulWidget {
   final String title;
@@ -17,7 +18,8 @@ class AdminHeader extends StatefulWidget {
 }
 
 class _AdminHeaderState extends State<AdminHeader> {
-  final DatabaseService _databaseService = DatabaseService();
+  final NotificationService _notificationService = NotificationService();
+  final AuthManager _authManager = AuthManager();
   int _unreadCount = 0;
 
   @override
@@ -27,7 +29,7 @@ class _AdminHeaderState extends State<AdminHeader> {
   }
 
   Future<void> _loadUnreadCount() async {
-    final count = await _databaseService.getUnreadNotificationCount();
+    final count = await _notificationService.getUnreadNotificationCount();
     if (mounted) {
       setState(() {
         _unreadCount = count;
@@ -101,17 +103,31 @@ class _AdminHeaderState extends State<AdminHeader> {
             ),
           ),
 
-          // Notifications
-          IconButton(
-            icon: Stack(
+          // Notifications - FIXED VERSION
+          Container(
+            width: 40,
+            height: 40,
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                const Icon(Icons.notifications_outlined),
+                // Bell Icon
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
+                  onPressed: _showNotifications,
+                ),
+                
+                // Notification Badge - FIXED POSITIONING AND SIZE
                 if (_unreadCount > 0)
                   Positioned(
-                    right: 0,
-                    top: 0,
+                    right: 6,
+                    top: 6,
                     child: Container(
-                      padding: const EdgeInsets.all(2),
+                      padding: const EdgeInsets.all(4),
                       decoration: const BoxDecoration(
                         color: Colors.red,
                         shape: BoxShape.circle,
@@ -119,6 +135,7 @@ class _AdminHeaderState extends State<AdminHeader> {
                       constraints: const BoxConstraints(
                         minWidth: 18,
                         minHeight: 18,
+                        maxWidth: 24,
                       ),
                       child: Text(
                         _unreadCount > 9 ? '9+' : _unreadCount.toString(),
@@ -126,50 +143,52 @@ class _AdminHeaderState extends State<AdminHeader> {
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
+                          height: 1.0,
                         ),
                         textAlign: TextAlign.center,
+                        maxLines: 1,
                       ),
                     ),
                   ),
               ],
             ),
-            onPressed: _showNotifications,
           ),
 
-          // Admin User Profile
-          Container(
-            margin: const EdgeInsets.only(left: 16),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  radius: 20,
-                  backgroundImage: NetworkImage(
-                    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+          // Simple Admin Display
+          const SizedBox(width: 16),
+          const Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.blue,
+                child: Icon(
+                  Icons.admin_panel_settings,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Administrator',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Admin User',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
+                  Text(
+                    'System Admin',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
                     ),
-                    Text(
-                      'Administrator',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
