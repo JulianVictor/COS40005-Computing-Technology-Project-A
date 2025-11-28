@@ -8,7 +8,6 @@ class ProfilePage extends StatelessWidget {
   static const Map<String, String> _userData = {
     'firstName': 'Tsung Yin',
     'lastName': 'Ng',
-    'licenseNumber': 'LIC123456789',
     'phone': '+60174865555',
     'email': 'tsungyin@gmail.com',
   };
@@ -103,13 +102,7 @@ class ProfilePage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      _userData['licenseNumber']!,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
-                    ),
+
                   ],
                 ),
               ),
@@ -151,7 +144,6 @@ class ProfilePage extends StatelessWidget {
                         // Personal Details
                         _buildProfileDetail('First Name', _userData['firstName']!),
                         _buildProfileDetail('Last Name', _userData['lastName']!),
-                        _buildProfileDetail('License Number', _userData['licenseNumber']!),
                         _buildProfileDetail('Phone Number', _userData['phone']!),
                         _buildProfileDetail('Email', _userData['email']!),
 

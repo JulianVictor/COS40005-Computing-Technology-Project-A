@@ -1,3 +1,4 @@
+import '../services/supabase_service.dart';
 import 'registration_step2.dart';
 import 'package:flutter/material.dart';
 
@@ -304,13 +305,15 @@ class _RegistrationStep1State extends State<RegistrationStep1> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Go to next registration step
+                    onPressed: () async {
+                      // Save farm details first, then go to next step
+                      await _saveFarmDetails();
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const RegistrationStep2()),
                       );
                     },
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2D108E),
                       foregroundColor: Colors.white,
@@ -393,6 +396,33 @@ class _RegistrationStep1State extends State<RegistrationStep1> {
       ),
     );
   }
+
+  // Backend
+  Future<void> _saveFarmDetails() async {
+    try {
+      // Create instance first, then use client
+      final supabase = SupabaseService();
+      final user = supabase.client.auth.currentUser;
+
+      if (user != null) {
+        await supabase.client.from('farms').insert({
+          'ownerid': user.id,
+          'farmname': _farmNameController.text,
+          'state': _selectedState,
+          'district': _selectedDistrict,
+          'postcode': _postcodeController.text,
+          'areahectares': double.tryParse(_farmAreaController.text) ?? 0.0,
+          'treecount': int.tryParse(_treeStandsController.text) ?? 0,
+        });
+        print('Farm details saved successfully!');
+      } else {
+        print('No user logged in - cannot save farm');
+      }
+    } catch (e) {
+      print('Error saving farm details: $e');
+    }
+  }
+
 
   // Helper method to create consistent text fields
   Widget _buildTextField({

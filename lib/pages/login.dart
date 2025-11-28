@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'reset_password.dart';
-import 'home.dart'; // ADD THIS IMPORT
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/supabase_service.dart';
+import 'home.dart';
 
 class LoginPage extends StatefulWidget { // CHANGED to StatefulWidget
   const LoginPage({super.key});
@@ -10,14 +12,15 @@ class LoginPage extends StatefulWidget { // CHANGED to StatefulWidget
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailOrPhoneController = TextEditingController();
+
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
   // Dummy credentials
-  final String _dummyPhone = '0174865555';
-  final String _dummyPassword = 'dmcocoa';
+  //final String _dummyPhone = '0174865555';
+  //final String _dummyPassword = 'dmcocoa';
 
   @override
   Widget build(BuildContext context) {
@@ -52,10 +55,11 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
 
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                 // Logo
                 Image.asset(
                   'lib/assets/images/login.png',
@@ -75,12 +79,12 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 40),
 
                 // Phone Number Field
-                TextField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    hintText: 'Phone Number (e.g.: 0128888888)',
-                    prefixIcon: const Icon(Icons.phone_rounded, color: Color(0xFF2D108E)),
+                      TextField(
+                        controller: _emailOrPhoneController,
+                        keyboardType: TextInputType.text, // Changed from phone
+                        decoration: InputDecoration(
+                          hintText: 'Email or Phone Number',
+                          prefixIcon: const Icon(Icons.email_rounded, color: Color(0xFF2D108E)),
                     filled: true,
                     fillColor: const Color.fromRGBO(128, 128, 128, 0.05),
                     border: OutlineInputBorder(
@@ -189,43 +193,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-
-                // Demo Credentials Hint
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2D108E).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: const Color(0xFF2D108E).withOpacity(0.3),
-                    ),
-                  ),
-                  child: const Column(
-                    children: [
-                      Text(
-                        'Demo Credentials:',
-                        style: TextStyle(
-                          color: Color(0xFF2D108E),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Phone: 0174865555 | Password: dmcocoa',
-                        style: TextStyle(
-                          color: Color(0xFF2D108E),
-                          fontSize: 11,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
+          )
         ],
         ),
       ),
@@ -234,41 +205,111 @@ class _LoginPageState extends State<LoginPage> {
 
   }
 
-  void _handleLogin() {
-    final phone = _phoneController.text.trim();
+
+  void _handleLogin() async {
+    final input = _emailOrPhoneController.text.trim();
     final password = _passwordController.text.trim();
 
-    // Validation
-    if (phone.isEmpty || password.isEmpty) {
-      _showError('Please enter both phone number and password');
+    print('=== LOGIN ATTEMPT ===');
+    print('Input: $input');
+    print('Password: $password');
+
+    if (input.isEmpty || password.isEmpty) {
+      _showError('Please enter both email/phone and password');
       return;
     }
 
-    // Remove any spaces or dashes from phone number
-    final cleanPhone = phone.replaceAll(RegExp(r'[-\s]'), '');
+    setState(() { _isLoading = true; });
 
-    setState(() {
-      _isLoading = true;
-    });
+    try {
+      final supabase = SupabaseService();
+      String? userEmail;
 
-    // Simulate API call delay
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _isLoading = false;
-      });
+      final isEmail = input.contains('@');
+      print('Is email: $isEmail');
 
-      // Check credentials
-      if (cleanPhone == _dummyPhone && password == _dummyPassword) {
-        // Successful login - navigate to home page
+      if (isEmail) {
+        // Try direct login with email
+        userEmail = input;
+        print('Using email directly: $userEmail');
+
+        final userData = await supabase.client
+            .from('users')
+            .select('accountstatus')
+            .eq('email', userEmail!)
+            .maybeSingle();
+
+        print('Email user data: $userData');
+
+        if (userData != null && userData['accountstatus'] != 'approved') {
+          _showWarning('Account pending admin approval. Please wait for approval.');
+          setState(() { _isLoading = false; });
+          return;
+        }
+      } else {
+        // Input is phone number - find user by phone
+        final phone = input.replaceAll(RegExp(r'[-\s]'), '');
+
+        // Add country code if missing (since registration saves with +60)
+        String phoneToSearch = phone;
+        if (!phone.startsWith('+')) {
+          phoneToSearch = '+60$phone';
+        }
+
+        print('Searching for phone: $phoneToSearch');
+
+        final userData = await supabase.client
+            .from('users')
+            .select('email, accountstatus, phonenumber')
+            .eq('phonenumber', phoneToSearch)
+            .maybeSingle();
+
+        print('Found user data: $userData');
+
+        if (userData != null) {
+          userEmail = userData['email'];
+
+          // ✅ UPDATED: Only allow login if status is 'approved'
+          if (userData['accountstatus'] != 'approved') {
+            _showWarning('Account pending admin approval. Please wait for approval.');
+            setState(() { _isLoading = false; });
+            return;
+          }
+        }else {
+          _showError('No account found with this phone number');
+          setState(() { _isLoading = false; });
+          return;
+        }
+      }
+
+      // If userEmail is null, it means user registered with phone only
+      if (userEmail == null) {
+        _showError('Please use your registered email to login, or contact support.');
+        setState(() { _isLoading = false; });
+        return;
+      }
+
+      print('Attempting login with email: $userEmail');
+
+      // Attempt login
+      final AuthResponse authResponse = await supabase.client.auth.signInWithPassword(
+        email: userEmail,
+        password: password,
+      );
+
+      if (authResponse.user != null) {
+        print('Login successful!');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
         );
-      } else {
-        // Failed login
-        _showError('Invalid phone number or password. Please try again.');
       }
-    });
+    } catch (e) {
+      print('Login error: $e');
+      _showError('Invalid email/phone or password. Please try again.');
+    } finally {
+      setState(() { _isLoading = false; });
+    }
   }
 
   void _showError(String message) {
@@ -291,9 +332,29 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _showWarning(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.orange, // Different color for warnings
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 4), // Longer duration for important messages
+      ),
+    );
+  }
+
   @override
   void dispose() {
-    _phoneController.dispose();
+    _emailOrPhoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }

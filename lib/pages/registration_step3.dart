@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'login.dart';
+import 'welcome_page.dart';
 
 class RegistrationStep3 extends StatefulWidget {
   const RegistrationStep3({super.key});
@@ -101,7 +103,7 @@ class _RegistrationStep3State extends State<RegistrationStep3> {
                     ),
                     SizedBox(height: 17),
                     Text(
-                      "Please await admin's approval and look out for a WhatsApp text from them to be able to login. "
+                      "Please await admin's approval. Notice will be sent to your email. "
                       "Your account isn't available for use right away.",
                       style: TextStyle(
                         fontSize: 16,
@@ -121,10 +123,10 @@ class _RegistrationStep3State extends State<RegistrationStep3> {
                   child: ElevatedButton(
                     onPressed: () {
                       // Navigate back to welcome page or login page
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/welcome',
-                        (route) => false
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => WelcomePage()),
+                              (route) => false
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -173,7 +175,10 @@ class _RegistrationStep3State extends State<RegistrationStep3> {
                       const SizedBox(width: 4),
                       GestureDetector(
                         onTap: () {
-                          // Navigate to LoginPage()
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => LoginPage()),
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
