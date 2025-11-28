@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/supabase_service.dart';
 import 'registration_step3.dart';
 import 'package:flutter/material.dart';
 
@@ -12,7 +14,7 @@ class RegistrationStep2 extends StatefulWidget {
 class _RegistrationStep2State extends State<RegistrationStep2> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
-  final TextEditingController _licenseController = TextEditingController();
+  //final TextEditingController _licenseController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -145,14 +147,6 @@ class _RegistrationStep2State extends State<RegistrationStep2> {
                               ),
                               const SizedBox(height: 16),
 
-                              // License Number
-                              _buildTextField(
-                                controller: _licenseController,
-                                hintText: 'License Number',
-                                icon: Icons.badge_rounded,
-                              ),
-                              const SizedBox(height: 16),
-
                               // Phone Number with Country Code
                               Row(
                                 children: [
@@ -160,23 +154,27 @@ class _RegistrationStep2State extends State<RegistrationStep2> {
                                   Container(
                                     width: 120,
                                     decoration: BoxDecoration(
-                                      color: const Color.fromRGBO(128, 128, 128, 0.05),
+                                      color: const Color.fromRGBO(
+                                          128, 128, 128, 0.05),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: const Color.fromRGBO(128, 128, 128, 0.3),
+                                        color: const Color.fromRGBO(
+                                            128, 128, 128, 0.3),
                                       ),
                                     ),
                                     child: DropdownButtonHideUnderline(
                                       child: DropdownButton<String>(
                                         value: _selectedCountryCode,
                                         isExpanded: true,
-                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12),
                                         items: _countryCodes.map((country) {
                                           return DropdownMenuItem<String>(
                                             value: country['code'],
                                             child: Text(
                                               '${country['flag']} ${country['code']}',
-                                              style: const TextStyle(fontSize: 14),
+                                              style: const TextStyle(
+                                                  fontSize: 14),
                                             ),
                                           );
                                         }).toList(),
@@ -230,7 +228,8 @@ class _RegistrationStep2State extends State<RegistrationStep2> {
                                 obscureText: _obscureConfirmPassword,
                                 onToggle: () {
                                   setState(() {
-                                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                                    _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
                                   });
                                 },
                               ),
@@ -350,11 +349,13 @@ class _RegistrationStep2State extends State<RegistrationStep2> {
         fillColor: const Color.fromRGBO(128, 128, 128, 0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+          borderSide: const BorderSide(
+              color: Color.fromRGBO(128, 128, 128, 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+          borderSide: const BorderSide(
+              color: Color.fromRGBO(128, 128, 128, 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -378,7 +379,8 @@ class _RegistrationStep2State extends State<RegistrationStep2> {
         prefixIcon: const Icon(Icons.lock_rounded, color: Color(0xFF2D108E)),
         suffixIcon: IconButton(
           icon: Icon(
-            obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+            obscureText ? Icons.visibility_off_rounded : Icons
+                .visibility_rounded,
             color: const Color(0xFF2D108E),
           ),
           onPressed: onToggle,
@@ -387,11 +389,13 @@ class _RegistrationStep2State extends State<RegistrationStep2> {
         fillColor: const Color.fromRGBO(128, 128, 128, 0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+          borderSide: const BorderSide(
+              color: Color.fromRGBO(128, 128, 128, 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color.fromRGBO(128, 128, 128, 0.3)),
+          borderSide: const BorderSide(
+              color: Color.fromRGBO(128, 128, 128, 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -401,37 +405,83 @@ class _RegistrationStep2State extends State<RegistrationStep2> {
     );
   }
 
-  void _createAccount() {
-    // Password match validation - NO BACKEND NEEDED
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Passwords do not match!'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Basic validation
-    if (_firstNameController.text.isEmpty ||
-        _lastNameController.text.isEmpty ||
-        _licenseController.text.isEmpty ||
-        _phoneController.text.isEmpty ||
-        _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all required fields'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // If all validations pass, proceed to next step
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const RegistrationStep3()),
+// _createAccount method
+  void _createAccount() async {
+    // 1. Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) =>
+      const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
+
+    try {
+      // 2. Password match validation
+      if (_passwordController.text != _confirmPasswordController.text) {
+        Navigator.pop(context); // Remove loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Passwords do not match!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // 3. Basic validation
+      if (_firstNameController.text.isEmpty ||
+          _lastNameController.text.isEmpty ||
+          _phoneController.text.isEmpty ||
+          _passwordController.text.isEmpty) {
+        Navigator.pop(context); // Remove loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please fill in all required fields'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final supabase = SupabaseService();
+
+      final AuthResponse authResponse = await supabase.client.auth.signUp(
+        email: _emailController.text.isNotEmpty
+            ? _emailController.text
+            : '${_phoneController.text}@cocoafarm.com',
+        password: _passwordController.text,
+      );
+
+      if (authResponse.user != null) {
+        await supabase.client.from('users').insert({
+          'userid': authResponse.user!.id,
+          'firstname': _firstNameController.text,
+          'lastname': _lastNameController.text,
+          'email': _emailController.text.isNotEmpty
+              ? _emailController.text
+              : null,
+          'phonenumber': '$_selectedCountryCode${_phoneController.text}',
+          'role': 'farmer',
+          'accountstatus': 'pending_approved',
+        });
+
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RegistrationStep3()),
+        );
+      }
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Registration failed: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      print('Registration error: $e');
+    }
   }
 }

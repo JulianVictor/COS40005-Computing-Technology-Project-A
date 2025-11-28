@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import '../pages/profile.dart'; // ADD IMPORT
-import '../pages/home.dart'; // ADD IMPORT
+import '../pages/profile.dart';
+import '../pages/home.dart';
+import '../pages/welcome_page.dart';
+import '../services/supabase_service.dart';
+
+
 
 class SideTab extends StatelessWidget {
   const SideTab({super.key});
@@ -394,14 +398,30 @@ class SideTab extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(context); // Close dialog
-                        // TODO: Replace with actual logout logic
-                        Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/welcome',
-                                (route) => false
-                        );
+
+                        try {
+                          // Add Supabase import at top if not already there
+                          // import '../services/supabase_service.dart';
+                          final supabase = SupabaseService();
+                          await supabase.client.auth.signOut(); // Sign out from Supabase
+
+                          // Navigate to welcome page
+                          Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const WelcomePage()),
+                                  (route) => false
+                          );
+                        } catch (e) {
+                          print('Logout error: $e');
+                          // Still navigate to welcome page even if logout fails
+                          Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const WelcomePage()),
+                                  (route) => false
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,

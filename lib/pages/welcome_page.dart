@@ -53,9 +53,9 @@ class WelcomePage extends StatelessWidget {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'CPB Vision',
+                      'CPB AI Vision',
                       style: TextStyle(
-                        fontSize: 50,
+                        fontSize: 45,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF2D108E),
                       ),
