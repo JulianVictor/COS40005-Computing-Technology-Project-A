@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
-import 'home.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/database_models.dart';
 class AddFarmPage extends StatefulWidget {
   const AddFarmPage({super.key});
 
@@ -12,6 +11,7 @@ class AddFarmPage extends StatefulWidget {
 class _AddFarmPageState extends State<AddFarmPage> {
   // Form controllers
   final TextEditingController _farmNameController = TextEditingController();
+  final TextEditingController _villageController = TextEditingController();
   final TextEditingController _postcodeController = TextEditingController();
   final TextEditingController _farmAreaController = TextEditingController();
   final TextEditingController _treeStandsController = TextEditingController();
@@ -21,7 +21,6 @@ class _AddFarmPageState extends State<AddFarmPage> {
   // Dropdown values
   String? _selectedState;
   String? _selectedDistrict;
-  String? _selectedCountry;
 
   // Sample data
   final Map<String, List<String>> _stateDistricts = {
@@ -124,6 +123,15 @@ class _AddFarmPageState extends State<AddFarmPage> {
 
                             const SizedBox(height: 16),
 
+                            // Village (Required in schema)
+                            _buildTextField(
+                              controller: _villageController,
+                              hintText: 'Village',
+                              icon: Icons.location_city_rounded,
+                            ),
+
+                            const SizedBox(height: 16),
+
                             // State Dropdown
                             _buildDropdownField(
                               value: _selectedState,
@@ -155,10 +163,10 @@ class _AddFarmPageState extends State<AddFarmPage> {
                               ),
                             if (_selectedState != null) const SizedBox(height: 16),
 
-                            // Postcode (Optional)
+                            // Postcode
                             _buildTextField(
                               controller: _postcodeController,
-                              hintText: 'Postcode (Optional)',
+                              hintText: 'Postcode',
                               icon: Icons.location_on_rounded,
                               keyboardType: TextInputType.number,
                             ),
@@ -495,10 +503,15 @@ class _AddFarmPageState extends State<AddFarmPage> {
     );
   }
 
-  void _addFarm() {
+  void _addFarm() async {
     // Basic validation
     if (_farmNameController.text.isEmpty) {
       _showError('Please enter farm name');
+      return;
+    }
+
+    if (_villageController.text.isEmpty) {
+      _showError('Please enter village');
       return;
     }
 
@@ -512,6 +525,11 @@ class _AddFarmPageState extends State<AddFarmPage> {
       return;
     }
 
+    if (_postcodeController.text.isEmpty) {
+      _showError('Please enter postcode');
+      return;
+    }
+
     if (_farmAreaController.text.isEmpty) {
       _showError('Please enter farm area');
       return;
@@ -522,19 +540,75 @@ class _AddFarmPageState extends State<AddFarmPage> {
       return;
     }
 
-    // Create new farm
-    final newFarm = Farm(
-      name: _farmNameController.text.trim(),
-      state: _selectedState!,
-      treeStands: int.tryParse(_treeStandsController.text) ?? 0,
-      latestEggCount: 0, // Will be set after first sampling
-      needsTreatment: false, // Will be determined after sampling
-      latitude: double.tryParse(_latitudeController.text) ?? 0.0,
-      longitude: double.tryParse(_longitudeController.text) ?? 0.0,
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
     );
 
-    // Return the new farm to home page
-    Navigator.pop(context, newFarm);
+    try {
+      // Get current user ID from Supabase auth
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      if (currentUser == null) {
+        Navigator.pop(context); // Close loading
+        _showError('User not logged in');
+        return;
+      }
+
+      // Prepare farm data according to your database schema
+      final farmData = {
+        'ownerId': currentUser.id,
+        'farmName': _farmNameController.text.trim(),
+        'state': _selectedState!,
+        'district': _selectedDistrict!,
+        'village': _villageController.text.trim(),
+        'postcode': _postcodeController.text.trim(),
+        'areaHectares': double.tryParse(_farmAreaController.text) ?? 0.0,
+        'treeCount': int.tryParse(_treeStandsController.text) ?? 0,
+        'isActive': true,
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
+
+      // Save to Supabase and get the response
+      final response = await Supabase.instance.client
+          .from('farms')
+          .insert(farmData)
+          .select();  // Add .select() to get the inserted data back
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      if (response.isNotEmpty) {
+        // Create Farm object from the response
+        final newFarm = Farm.fromMap(response[0] as Map<String, dynamic>);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Farm added successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Return the actual farm data
+        Navigator.pop(context, newFarm);
+      } else {
+        _showError('Failed to create farm - no data returned');
+      }
+
+    } catch (e) {
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show error message
+      _showError('Failed to save farm: $e');
+    }
   }
 
   void _showError(String message) {
@@ -549,6 +623,7 @@ class _AddFarmPageState extends State<AddFarmPage> {
   @override
   void dispose() {
     _farmNameController.dispose();
+    _villageController.dispose();
     _postcodeController.dispose();
     _farmAreaController.dispose();
     _treeStandsController.dispose();
