@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'cocoa_yield_input.dart';
 import '../models/yield_record.dart' as yield_model;
-import '../services/database_service.dart';
 import '../models/database_models.dart';
+import '../services/cocoa_yield_service.dart';
 
 class CocoaYieldManagement extends StatefulWidget {
   final Farm? selectedFarm;
@@ -15,7 +15,7 @@ class CocoaYieldManagement extends StatefulWidget {
 }
 
 class _CocoaYieldManagementState extends State<CocoaYieldManagement> {
-  final DatabaseService _dbService = DatabaseService();
+  final CocoaYieldService _yieldService = CocoaYieldService();
   List<yield_model.YieldRecord> records = [];
   bool _isLoading = true;
 
@@ -29,7 +29,7 @@ class _CocoaYieldManagementState extends State<CocoaYieldManagement> {
     final String? currentUserId = await _getCurrentUserId();
     if (currentUserId != null) {
       // Use the selected farm ID if available, otherwise get all farms
-      final yieldRecords = await _dbService.getYieldRecords(
+      final yieldRecords = await _yieldService.getYieldRecords(
         currentUserId,
         farmId: widget.selectedFarm?.farmId,
       );
@@ -266,7 +266,7 @@ class _CocoaYieldManagementState extends State<CocoaYieldManagement> {
             onPressed: () async {
               try {
                 if (record.recordId != null) {
-                  await _dbService.deleteYieldRecord(record.recordId!);
+                  await _yieldService.deleteYieldRecord(record.recordId!);
                 }
                 await _loadRecords();
                 Navigator.pop(context);

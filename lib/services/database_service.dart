@@ -1,6 +1,7 @@
+// services/database_service.dart - CLEANED VERSION
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/database_models.dart';
-import '../models/yield_record.dart' as yield_model;
+// REMOVE: import '../models/yield_record.dart' as yield_model;
 
 class DatabaseService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -11,7 +12,7 @@ class DatabaseService {
       final response = await _client
           .from('users')
           .select()
-          .eq('userid', userId) // FIXED: lowercase 'userid'
+          .eq('userid', userId)
           .single();
 
       return AppUser.fromMap(response);
@@ -27,7 +28,7 @@ class DatabaseService {
       final response = await _client
           .from('farms')
           .select()
-          .eq('ownerid', userId); // FIXED: lowercase 'ownerid'
+          .eq('ownerid', userId);
 
       return (response as List<dynamic>)
           .map((e) => Farm.fromMap(e as Map<String, dynamic>))
@@ -72,50 +73,14 @@ class DatabaseService {
     }
   }
 
-  // Yield Records Operations
-  Future<List<yield_model.YieldRecord>> getYieldRecords(String farmerId, {String? farmId}) async {
-    try {
-      var query = _client
-          .from('yield_records')
-          .select()
-          .eq('farmerid', farmerId); // lowercase
-
-      if (farmId != null) {
-        query = query.eq('farmid', farmId); // lowercase
-      }
-
-      final response = await query.order('harvestdate', ascending: false); // lowercase
-
-      return (response as List<dynamic>)
-          .map((e) => yield_model.YieldRecord.fromMap(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      print('Error getting yield records: $e');
-      return [];
-    }
-  }
-
-  // ✅ ADD THIS METHOD - Yield Record Delete
-  Future<void> deleteYieldRecord(String recordId) async {
-    try {
-      await _client
-          .from('yield_records')
-          .delete()
-          .eq('recordid', recordId); // lowercase 'recordid'
-    } catch (e) {
-      print('Error deleting yield record: $e');
-      rethrow;
-    }
-  }
-
   // Get farms for dropdown - FIXED
   Future<List<Map<String, dynamic>>> getUserFarmsForDropdown(String farmerId) async {
     try {
       final response = await _client
           .from('farms')
-          .select('farmid, farmname') // lowercase
-          .eq('ownerid', farmerId) // lowercase
-          .eq('isactive', true); // lowercase
+          .select('farmid, farmname')
+          .eq('ownerid', farmerId)
+          .eq('isactive', true);
 
       return (response as List<dynamic>).cast<Map<String, dynamic>>();
     } catch (e) {

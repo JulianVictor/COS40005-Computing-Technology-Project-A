@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../services/database_service.dart';
+import '../services/cocoa_yield_service.dart';
 import '../models/yield_record.dart' as yield_model;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/database_models.dart';
+import '../services/farm_selection_service.dart';
 
 class CocoaYieldInput extends StatefulWidget {
   final yield_model.YieldRecord? record;
@@ -15,8 +16,10 @@ class CocoaYieldInput extends StatefulWidget {
 }
 
 class _CocoaYieldInputState extends State<CocoaYieldInput> {
+  final CocoaYieldService _yieldService = CocoaYieldService();
+  final FarmSelectionService _farmService = FarmSelectionService();
   final _formKey = GlobalKey<FormState>();
-  final DatabaseService _dbService = DatabaseService();
+
 
   // Form fields
   String? _selectedFarmId;
@@ -56,9 +59,13 @@ class _CocoaYieldInputState extends State<CocoaYieldInput> {
   Future<void> _loadFarms() async {
     final String? currentUserId = await _getCurrentUserId();
     if (currentUserId != null) {
-      final farms = await _dbService.getUserFarmsForDropdown(currentUserId);
+      final farms = await _farmService.getUserFarms(currentUserId);
+
       setState(() {
-        _farms = farms;
+        _farms = farms.map((farm) => {
+          'farmId': farm.farmId,
+          'farmName': farm.farmName,
+        }).toList();
         _isLoadingFarms = false;
 
         // Auto-select logic
@@ -116,9 +123,9 @@ class _CocoaYieldInputState extends State<CocoaYieldInput> {
 
       try {
         if (widget.record == null) {
-          await _dbService.createYieldRecord(record);
+          await _yieldService.createYieldRecord(record);
         } else {
-          await _dbService.updateYieldRecord(record);
+          await _yieldService.updateYieldRecord(record);
         }
 
         Navigator.pop(context, record);
