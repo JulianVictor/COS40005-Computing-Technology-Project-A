@@ -1,4 +1,3 @@
-// cocoa_yield_input.dart
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
 import '../models/yield_record.dart' as yield_model;

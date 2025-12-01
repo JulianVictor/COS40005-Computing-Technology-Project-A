@@ -2,22 +2,41 @@ import 'package:flutter/material.dart';
 import 'monitoring_cpb_pest.dart';
 import 'cocoa_yield_management.dart';
 import 'record_history.dart';
-import '../models/database_models.dart';
+import '../models/farm_selection_models.dart'; // ADD THIS IMPORT
 
 class HomeDashboard extends StatelessWidget {
-  final Farm farm;
-  final Function(Farm)? onFarmSelected;
+  final FarmSelection farm; // CHANGE: Add this parameter
+  final Function(FarmSelection) onFarmSelected; // CHANGE: Add this parameter
+
+  // KEEP your existing parameters with default values
+  final String farmName;
+  final double latitude;
+  final double longitude;
+  final int treeStands;
+  final int latestEggCount;
+  final bool needsTreatment;
 
   const HomeDashboard({
     super.key,
-    required this.farm,
-    this.onFarmSelected,
+    required this.farm, // ADD: Required parameter
+    required this.onFarmSelected, // ADD: Required parameter
+    this.farmName = "My Farm",
+    this.latitude = 0.0,
+    this.longitude = 0.0,
+    this.treeStands = 0,
+    this.latestEggCount = 0,
+    this.needsTreatment = false,
   });
 
   final Color purple = const Color(0xFF2D108E);
 
   @override
   Widget build(BuildContext context) {
+    // Use the farm data here
+    final actualFarmName = farm.farmName;
+    final actualTreeStands = farm.treeCount;
+    // ... more if needed
+
     return Scaffold(
       backgroundColor: Colors.white,
 
@@ -28,17 +47,9 @@ class HomeDashboard extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Column(
-          children: [
-            const Text(
-              "DMCOCOA",
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
-            Text(
-              farm.farmName,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ],
+        title: const Text(
+          "DMCOCOA",
+          style: TextStyle(color: Colors.white),
         ),
       ),
 
@@ -47,6 +58,13 @@ class HomeDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Display actual farm name from the FarmSelection object
+            Text(
+              "Farm: ${farm.farmName}", // Use farm.farmName
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
 
             const Text(
               "Record of Last CPB Pest Monitoring",
@@ -73,13 +91,16 @@ class HomeDashboard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Farm     : ${farm.farmName}"),
+                  Text("Farm: ${farm.farmName}"),
+                  Text("Location: ${farm.state}, ${farm.district}"),
+                  Text("Area: ${farm.areaHectares} hectares"),
+                  Text("Tree Stands: ${farm.treeCount}"),
+                  const SizedBox(height: 10),
+                  const Text("Date     : 01.09.2021"),
                   const SizedBox(height: 6),
-                  Text("Location : ${farm.district}, ${farm.state}"),
+                  const Text("Decision : TREAT"),
                   const SizedBox(height: 6),
-                  Text("Area     : ${farm.areaHectares} hectares"),
-                  const SizedBox(height: 6),
-                  Text("Tree Stands : ${farm.treeCount}"),
+                  const Text("Remark  : Reuse DMCOCOA on 11.09.2021"),
                 ],
               ),
             ),
@@ -89,9 +110,7 @@ class HomeDashboard extends StatelessWidget {
             _mainButton("Monitoring of CPB Pest", () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => MonitoringCPBPest(farm: farm),
-                ),
+                MaterialPageRoute(builder: (context) => const MonitoringCPBPest()),
               );
             }),
             const SizedBox(height: 12),
@@ -99,9 +118,7 @@ class HomeDashboard extends StatelessWidget {
             _mainButton("Cocoa Yield Management", () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => CocoaYieldManagement(selectedFarm: farm),
-                ),
+                MaterialPageRoute(builder: (context) => const CocoaYieldManagement()),
               );
             }),
             const SizedBox(height: 12),
@@ -109,9 +126,7 @@ class HomeDashboard extends StatelessWidget {
             _mainButton("Record History", () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => RecordHistory(selectedFarm: farm),
-                ),
+                MaterialPageRoute(builder: (context) => const RecordHistory()),
               );
             }),
           ],
@@ -134,7 +149,7 @@ class HomeDashboard extends StatelessWidget {
   }
 }
 
-// ✅ Styled Main Button
+// Styled Main Button
 Widget _mainButton(String title, VoidCallback onTap) {
   return SizedBox(
     width: double.infinity,

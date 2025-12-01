@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/database_models.dart';
-import '../models/yield_record.dart' as yield_model; // Alias to avoid conflict
+import '../models/yield_record.dart' as yield_model;
 
 class DatabaseService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -11,7 +11,7 @@ class DatabaseService {
       final response = await _client
           .from('users')
           .select()
-          .eq('userId', userId)
+          .eq('userid', userId) // FIXED: lowercase 'userid'
           .single();
 
       return AppUser.fromMap(response);
@@ -21,33 +21,41 @@ class DatabaseService {
     }
   }
 
-  Future<void> createUser(AppUser user) async {
-    try {
-      await _client.from('users').insert(user.toMap());
-    } catch (e) {
-      print('Error creating user: $e');
-      rethrow;
-    }
-  }
-
-  // Farm Operations
+  // Farm Operations - FIXED
   Future<List<Farm>> getUserFarms(String userId) async {
     try {
       final response = await _client
           .from('farms')
           .select()
-          .eq('ownerId', userId);
+          .eq('ownerid', userId); // FIXED: lowercase 'ownerid'
 
-      return (response as List<dynamic>).map((e) => Farm.fromMap(e as Map<String, dynamic>)).toList();
+      return (response as List<dynamic>)
+          .map((e) => Farm.fromMap(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       print('Error getting farms: $e');
       return [];
     }
   }
 
+  // CREATE Farm - FIXED
   Future<void> createFarm(Farm farm) async {
     try {
-      await _client.from('farms').insert(farm.toMap());
+      final farmMap = {
+        'ownerid': farm.ownerId,
+        'farmname': farm.farmName,
+        'state': farm.state,
+        'district': farm.district,
+        'village': farm.village,
+        'postcode': farm.postcode,
+        'areahectares': farm.areaHectares,
+        'treecount': farm.treeCount,
+        'isactive': farm.isActive,
+        'createdat': farm.createdAt.toIso8601String(),
+        'updatedat': farm.updatedAt.toIso8601String(),
+      };
+
+      await _client.from('farms').insert(farmMap);
     } catch (e) {
       print('Error creating farm: $e');
       rethrow;
@@ -64,19 +72,19 @@ class DatabaseService {
     }
   }
 
-  // === NEW YIELD RECORDS OPERATIONS ===
+  // Yield Records Operations
   Future<List<yield_model.YieldRecord>> getYieldRecords(String farmerId, {String? farmId}) async {
     try {
       var query = _client
           .from('yield_records')
           .select()
-          .eq('farmerId', farmerId);
+          .eq('farmerid', farmerId); // lowercase
 
       if (farmId != null) {
-        query = query.eq('farmId', farmId);
+        query = query.eq('farmid', farmId); // lowercase
       }
 
-      final response = await query.order('harvestDate', ascending: false);
+      final response = await query.order('harvestdate', ascending: false); // lowercase
 
       return (response as List<dynamic>)
           .map((e) => yield_model.YieldRecord.fromMap(e as Map<String, dynamic>))
@@ -87,52 +95,27 @@ class DatabaseService {
     }
   }
 
-  Future<String> createYieldRecord(yield_model.YieldRecord record) async {
-    try {
-      final response = await _client
-          .from('yield_records')
-          .insert(record.toMap())
-          .select();
-
-      return response[0]['recordId'] as String;
-    } catch (e) {
-      print('Error creating yield record: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> updateYieldRecord(yield_model.YieldRecord record) async {
-    try {
-      await _client
-          .from('yield_records')
-          .update(record.toMap())
-          .eq('recordId', record.recordId!);
-    } catch (e) {
-      print('Error updating yield record: $e');
-      rethrow;
-    }
-  }
-
+  // ✅ ADD THIS METHOD - Yield Record Delete
   Future<void> deleteYieldRecord(String recordId) async {
     try {
       await _client
           .from('yield_records')
           .delete()
-          .eq('recordId', recordId);
+          .eq('recordid', recordId); // lowercase 'recordid'
     } catch (e) {
       print('Error deleting yield record: $e');
       rethrow;
     }
   }
 
-  // Get farms for dropdown selection
+  // Get farms for dropdown - FIXED
   Future<List<Map<String, dynamic>>> getUserFarmsForDropdown(String farmerId) async {
     try {
       final response = await _client
           .from('farms')
-          .select('farmId, farmName')
-          .eq('ownerId', farmerId)
-          .eq('isActive', true);
+          .select('farmid, farmname') // lowercase
+          .eq('ownerid', farmerId) // lowercase
+          .eq('isactive', true); // lowercase
 
       return (response as List<dynamic>).cast<Map<String, dynamic>>();
     } catch (e) {
@@ -140,6 +123,4 @@ class DatabaseService {
       return [];
     }
   }
-
-// Add other methods as needed...
 }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/database_models.dart'; // Import your actual Farm model
+import '../services/farm_selection_service.dart';
+import '../models/farm_selection_models.dart';
+
 
 class EditFarmPage extends StatefulWidget {
-  final Farm farm;
+  final FarmSelection farm;
   final int farmIndex;
-  final Function(Farm, int) onFarmUpdated;
+  final Function(FarmSelection, int) onFarmUpdated;
 
   const EditFarmPage({
     super.key,
@@ -58,14 +59,14 @@ class _EditFarmPageState extends State<EditFarmPage> {
   void initState() {
     super.initState();
 
-    // Pre-fill controllers with existing farm data using your actual Farm model
+    // Pre-fill controllers with FarmSelection data
     _farmNameController = TextEditingController(text: widget.farm.farmName);
     _villageController = TextEditingController(text: widget.farm.village);
     _postcodeController = TextEditingController(text: widget.farm.postcode);
     _farmAreaController = TextEditingController(text: widget.farm.areaHectares.toString());
     _treeStandsController = TextEditingController(text: widget.farm.treeCount.toString());
-    _latitudeController = TextEditingController(text: '0.0'); // You might want to add these to your Farm model
-    _longitudeController = TextEditingController(text: '0.0'); // You might want to add these to your Farm model
+    _latitudeController = TextEditingController(text: widget.farm.latitude?.toString() ?? '');
+    _longitudeController = TextEditingController(text: widget.farm.longitude?.toString() ?? '');
 
     // Pre-fill dropdowns
     _selectedState = widget.farm.state;
@@ -574,61 +575,50 @@ class _EditFarmPageState extends State<EditFarmPage> {
     );
 
     try {
-      // Update farm in Supabase
-      final updateData = {
-        'farmName': _farmNameController.text.trim(),
-        'village': _villageController.text.trim(),
-        'state': _selectedState!,
-        'district': _selectedDistrict!,
-        'postcode': _postcodeController.text.trim(),
-        'areaHectares': double.tryParse(_farmAreaController.text) ?? 0.0,
-        'treeCount': int.tryParse(_treeStandsController.text) ?? 0,
-        'updatedAt': DateTime.now().toIso8601String(),
-      };
-
-      await Supabase.instance.client
-          .from('farms')
-          .update(updateData)
-          .eq('farmId', widget.farm.farmId);
-
-      // Close loading dialog
-      Navigator.pop(context);
-
-      // Create updated farm object for callback
-      final updatedFarm = Farm(
-        farmId: widget.farm.farmId,
-        ownerId: widget.farm.ownerId,
+      // Create updated FarmSelection using copyWith (which exists on FarmSelection)
+      final updatedFarm = widget.farm.copyWith(
         farmName: _farmNameController.text.trim(),
+        village: _villageController.text.trim(),
         state: _selectedState!,
         district: _selectedDistrict!,
-        village: _villageController.text.trim(),
         postcode: _postcodeController.text.trim(),
         areaHectares: double.tryParse(_farmAreaController.text) ?? 0.0,
         treeCount: int.tryParse(_treeStandsController.text) ?? 0,
-        createdAt: widget.farm.createdAt,
         updatedAt: DateTime.now(),
-        isActive: widget.farm.isActive,
+        latitude: _latitudeController.text.isNotEmpty
+            ? double.tryParse(_latitudeController.text)
+            : null,
+        longitude: _longitudeController.text.isNotEmpty
+            ? double.tryParse(_longitudeController.text)
+            : null,
       );
 
-      // Call the callback to update the farm in home page
-      widget.onFarmUpdated(updatedFarm, widget.farmIndex);
+      // Update in database using FarmSelectionService
+      final farmService = FarmSelectionService();
+      final savedFarm = await farmService.updateFarm(updatedFarm);
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Farm updated successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      Navigator.pop(context); // Close loading dialog
 
-      // Navigate back
-      Navigator.pop(context);
+      if (savedFarm != null) {
+        // Call the callback to update the farm in home page
+        widget.onFarmUpdated(savedFarm, widget.farmIndex);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Farm updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate back
+        Navigator.pop(context);
+      } else {
+        _showError('Failed to update farm');
+      }
 
     } catch (e) {
-      // Close loading dialog
-      Navigator.pop(context);
-
-      // Show error message
+      Navigator.pop(context); // Close loading dialog
       _showError('Failed to update farm: $e');
     }
   }

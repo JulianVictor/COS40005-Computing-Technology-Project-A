@@ -4,9 +4,9 @@ import 'add_farm.dart';
 import 'edit_farm.dart';
 import 'home_dashboard.dart';
 import 'profile.dart';
-import '/widgets/side_tab.dart';
-import '/services/database_service.dart';
-import '/models/database_models.dart';
+import '../widgets/side_tab.dart';
+import '../services/farm_selection_service.dart';
+import '../models/farm_selection_models.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,10 +16,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final DatabaseService _dbService = DatabaseService();
-  List<Farm> _farms = [];
+  final FarmSelectionService _farmService = FarmSelectionService();
+  List<FarmSelection> _farms = [];
   bool _isLoading = true;
-  Farm? _selectedFarm; // Track the currently selected farm
+  FarmSelection? _selectedFarm;
 
   @override
   void initState() {
@@ -30,7 +30,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadFarms() async {
     final String? currentUserId = await _getCurrentUserId();
     if (currentUserId != null) {
-      final farms = await _dbService.getUserFarms(currentUserId);
+      final farms = await _farmService.getUserFarms(currentUserId);
       setState(() {
         _farms = farms;
         _isLoading = false;
@@ -196,10 +196,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFarmCard(Farm farm, int index) {
+  // CHANGE: Farm → FarmSelection in parameter type
+  Widget _buildFarmCard(FarmSelection farm, int index) {
     return GestureDetector(
       onTap: () {
-        // Set the selected farm and navigate to dashboard
         setState(() {
           _selectedFarm = farm;
         });
@@ -208,9 +208,8 @@ class _HomePageState extends State<HomePage> {
           context,
           MaterialPageRoute(
             builder: (context) => HomeDashboard(
-              farm: farm, // Pass the entire farm object
+              farm: farm,
               onFarmSelected: (selectedFarm) {
-                // Callback to update selected farm if needed
                 setState(() {
                   _selectedFarm = selectedFarm;
                 });
@@ -351,28 +350,28 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
   void _addNewFarm() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AddFarmPage()),
     ).then((result) {
-      if (result != null && result is Farm) {
-        // Farm was added successfully, reload the list
-        _loadFarms();
+      if (result != null && result is FarmSelection) { // CHANGE: Farm → FarmSelection
+        // Add to the beginning of the list
+        setState(() {
+          _farms.insert(0, result);
+        });
 
-        // Optional: Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${result.farmName} added successfully!'),
             backgroundColor: Colors.green,
           ),
         );
-      } else if (result == true) {
-        // Fallback for boolean return (backward compatibility)
-        _loadFarms();
       }
     });
   }
+
   void _editFarm(int index) {
     Navigator.push(
       context,
@@ -380,9 +379,11 @@ class _HomePageState extends State<HomePage> {
         builder: (context) => EditFarmPage(
           farm: _farms[index],
           farmIndex: index,
-          onFarmUpdated: (Farm updatedFarm, int index) { // Add types here
-            // Reload farms to get updated data
-            _loadFarms();
+          onFarmUpdated: (FarmSelection updatedFarm, int index) { // CHANGE: Farm → FarmSelection
+            // Update the farm in the list immediately
+            setState(() {
+              _farms[index] = updatedFarm;
+            });
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -396,9 +397,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-  void _handleFarmAction(Farm farm) {
-    // Set as selected farm and navigate to dashboard
+  // CHANGE: Farm → FarmSelection in parameter type
+  void _handleFarmAction(FarmSelection farm) {
     setState(() {
       _selectedFarm = farm;
     });
@@ -418,7 +418,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showMapPreview(Farm farm) {
+  // CHANGE: Farm → FarmSelection in parameter type
+  void _showMapPreview(FarmSelection farm) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -473,6 +474,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Getter for selected farm (can be used by other pages)
-  Farm? get selectedFarm => _selectedFarm;
+  // CHANGE: Return type from Farm? to FarmSelection?
+  FarmSelection? get selectedFarm => _selectedFarm;
 }
