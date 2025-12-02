@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/supabase_service.dart';
 
 class EditProfilePage extends StatefulWidget {
   final Map<String, String> userData;
@@ -18,6 +20,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   String? _selectedCountryCode = '+60';
   bool _isLoading = false;
+  final SupabaseService _supabaseService = SupabaseService();
 
   final List<Map<String, String>> _countryCodes = [
     {'code': '+60', 'flag': '🇲🇾', 'country': 'Malaysia'},
@@ -34,18 +37,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
     // Pre-fill controllers with existing user data
     _firstNameController.text = widget.userData['firstName']!;
     _lastNameController.text = widget.userData['lastName']!;
-    _licenseController.text = widget.userData['licenseNumber']!;
+    _licenseController.text = widget.userData['licenseNumber'] ?? '';
 
     // Extract country code and phone number
     final phone = widget.userData['phone']!;
     if (phone.startsWith('+')) {
-      final spaceIndex = phone.indexOf(' ');
-      if (spaceIndex != -1) {
-        _selectedCountryCode = phone.substring(0, spaceIndex);
-        _phoneController.text = phone.substring(spaceIndex + 1);
-      } else {
-        _phoneController.text = phone;
+      // Find where the country code ends (usually after 2-4 digits)
+      String? extractedCode;
+      for (var country in _countryCodes) {
+        if (phone.startsWith(country['code']!)) {
+          extractedCode = country['code'];
+          _phoneController.text = phone.substring(country['code']!.length);
+          break;
+        }
       }
+      _selectedCountryCode = extractedCode ?? '+60';
     } else {
       _phoneController.text = phone;
     }
@@ -318,11 +324,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  void _saveChanges() {
+  Future<void> _saveChanges() async {
     // Basic validation
     if (_firstNameController.text.isEmpty ||
         _lastNameController.text.isEmpty ||
-        _licenseController.text.isEmpty ||
         _phoneController.text.isEmpty ||
         _emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -338,11 +343,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
       _isLoading = true;
     });
 
-    // Simulate API call
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
+    try {
+      final User? currentUser = _supabaseService.client.auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Update user data in Supabase - FIXED: Removed .execute()
+      await _supabaseService.client
+          .from('users')
+          .update({
+        'firstname': _firstNameController.text,
+        'lastname': _lastNameController.text,
+        'phonenumber': '$_selectedCountryCode${_phoneController.text}',
+        'email': _emailController.text,
+        if (_licenseController.text.isNotEmpty)
+          'licensenumber': _licenseController.text,
+      })
+          .eq('userid', currentUser.id);
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
@@ -354,7 +372,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       // Navigate back
       Navigator.pop(context);
-    });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update profile: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
