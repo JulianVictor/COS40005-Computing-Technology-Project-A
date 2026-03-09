@@ -11,7 +11,7 @@ class DatabaseService {
       final response = await _client
           .from('users')
           .select()
-          .eq('userId', userId)
+          .eq('userid', userId)
           .single();
 
       return AppUser.fromMap(response);
@@ -36,7 +36,7 @@ class DatabaseService {
       final response = await _client
           .from('farms')
           .select()
-          .eq('ownerId', userId);
+          .eq('ownerid', userId);
 
       return (response as List<dynamic>).map((e) => Farm.fromMap(e as Map<String, dynamic>)).toList();
     } catch (e) {
@@ -70,13 +70,13 @@ class DatabaseService {
       var query = _client
           .from('yield_records')
           .select()
-          .eq('farmerId', farmerId);
+          .eq('farmerid', farmerId);
 
       if (farmId != null) {
-        query = query.eq('farmId', farmId);
+        query = query.eq('farmid', farmId);
       }
 
-      final response = await query.order('harvestDate', ascending: false);
+      final response = await query.order('harvestdate', ascending: false);
 
       return (response as List<dynamic>)
           .map((e) => yield_model.YieldRecord.fromMap(e as Map<String, dynamic>))
@@ -94,7 +94,7 @@ class DatabaseService {
           .insert(record.toMap())
           .select();
 
-      return response[0]['recordId'] as String;
+      return response[0]['recordid'] as String;
     } catch (e) {
       print('Error creating yield record: $e');
       rethrow;
@@ -106,7 +106,7 @@ class DatabaseService {
       await _client
           .from('yield_records')
           .update(record.toMap())
-          .eq('recordId', record.recordId!);
+          .eq('recordid', record.recordId!);
     } catch (e) {
       print('Error updating yield record: $e');
       rethrow;
@@ -130,8 +130,8 @@ class DatabaseService {
     try {
       final response = await _client
           .from('farms')
-          .select('farmId, farmName')
-          .eq('ownerId', farmerId)
+          .select('farmid, farmname')
+          .eq('ownerid', farmerId)
           .eq('isActive', true);
 
       return (response as List<dynamic>).cast<Map<String, dynamic>>();
@@ -141,5 +141,5 @@ class DatabaseService {
     }
   }
 
-// Add other methods as needed...
+// More methods if needed
 }
