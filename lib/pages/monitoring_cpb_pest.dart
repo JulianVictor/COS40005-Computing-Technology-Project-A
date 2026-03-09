@@ -1,93 +1,16 @@
 import 'package:flutter/material.dart';
+import 'home.dart';
 import 'cost_pesticide.dart';
-import 'home_dashboard.dart';
+import '../models/database_models.dart'; // Add this import
 
-class MonitoringCPBPest extends StatefulWidget {
-  const MonitoringCPBPest({super.key});
-
-  @override
-  State<MonitoringCPBPest> createState() => _MonitoringCPBPestState();
-}
-
-class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
+class MonitoringCPBPest extends StatelessWidget {
   final Color purple = const Color(0xFF2D108E);
   final Farm farm; // Add this
 
-  // List to store all monitoring records
-  List<Map<String, String>> _monitoringRecords = [
-    {
-      'date': '29.09.2025',
-      'eil': '1.67',
-      'sample': '2',
-      'eggs': '13',
-      'decision': 'TREAT',
-    },
-    {
-      'date': '-',
-      'eil': '-',
-      'sample': '-',
-      'eggs': '-',
-      'decision': '-',
-    },
-  ];
-
-  // Function to add a new monitoring card
-  void _addNewMonitoringCard() {
-    setState(() {
-      _monitoringRecords.add({
-        'date': '-',
-        'eil': '-',
-        'sample': '-',
-        'eggs': '-',
-        'decision': '-',
-      });
-    });
-  }
-
-  // Function to delete a monitoring card with confirmation
-  void _deleteMonitoringCard(int index) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Record'),
-        content: const Text('Are you sure you want to delete this record?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _monitoringRecords.removeAt(index);
-              });
-              Navigator.pop(context);
-            },
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Function to navigate to Cost Pesticide page and wait for result
-  void _navigateToCostPesticide() async {
-    // Wait for result from CostPesticidePage
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const CostPesticidePage(),
-      ),
-    );
-
-    // If result is true, add a new monitoring card
-    if (result == true) {
-      _addNewMonitoringCard();
-    }
-  }
+  const MonitoringCPBPest({
+    super.key,
+    required this.farm, // Add this
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -98,12 +21,7 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
         backgroundColor: purple,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const HomeDashboard()),
-            );
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
         title: Column(
@@ -124,34 +42,40 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            // Display all monitoring cards
-            ..._monitoringRecords.asMap().entries.map((entry) {
-              final index = entry.key;
-              final record = entry.value;
-
-              return Column(
-                children: [
-                  _monitoringCard(
-                    date: record['date']!,
-                    eil: record['eil']!,
-                    sample: record['sample']!,
-                    eggs: record['eggs']!,
-                    decision: record['decision']!,
-                    onDelete: () => _deleteMonitoringCard(index), onEdit: () {  },
-                  ),
-                  if (index < _monitoringRecords.length - 1)
-                    const SizedBox(height: 16),
-                ],
-              );
-            }).toList(),
+            // You can now use farm data in your cards
+            _monitoringCard(
+              farmName: farm.farmName, // Pass farm name
+              date: "29.09.2025",
+              eil: "1.67",
+              sample: "2",
+              eggs: "13",
+              decision: "TREAT",
+              onDelete: () {},
+            ),
+            const SizedBox(height: 16),
+            _monitoringCard(
+              farmName: farm.farmName, // Pass farm name
+              date: "10.10.2025",
+              eil: "1.67",
+              sample: "3",
+              eggs: "2",
+              decision: "Continue Sampling",
+              onDelete: () {},
+            ),
           ],
         ),
       ),
 
-      // FAB navigates to Cost Pesticide page
       floatingActionButton: FloatingActionButton(
         backgroundColor: purple,
-        onPressed: _navigateToCostPesticide,
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CostPesticidePage(), // Pass farm to next page if needed
+            ),
+          );
+        },
         child: const Icon(Icons.add, size: 28, color: Colors.white),
       ),
 
@@ -177,7 +101,7 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
     required String sample,
     required String eggs,
     required String decision,
-    required VoidCallback onDelete, required Null Function() onEdit,
+    required VoidCallback onDelete,
   }) {
     return Card(
       elevation: 5,
@@ -191,28 +115,20 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    date,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16
-                    ),
-                  ),
+                  Text("Farm: $farmName", style: const TextStyle(fontWeight: FontWeight.bold)), // Show farm name
+                  const SizedBox(height: 4),
+                  Text(date, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 8),
                   Text("EIL: $eil"),
-                  const SizedBox(height: 4),
                   Text("Total Sample: $sample"),
-                  const SizedBox(height: 4),
                   Text("Cumulative No. of CPB Eggs: $eggs"),
-                  const SizedBox(height: 4),
                   Text("Decision: $decision"),
                 ],
               ),
             ),
-            // Delete button only - changed to filled bin icon
             IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.grey),
               onPressed: onDelete,
-              icon: const Icon(Icons.delete, color: Colors.red),
             ),
           ],
         ),
