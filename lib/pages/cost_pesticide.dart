@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'labour_cost.dart';
+import 'monitoring_cpb_pest.dart';
 
 
 class CostPesticidePage extends StatefulWidget {
@@ -22,6 +23,14 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
 
   String formatDate(DateTime date) => DateFormat("dd MMM yyyy").format(date);
 
+// DUMMY DATA - Pre-filled values for testing
+  final Map<String, dynamic> dummyData = {
+    'brand': 'ABCDE',
+    'price': 100.0,
+    'sprayPumps': 2.0,
+    'rate': 3.0,
+  };
+
   void _calculateCost() {
     double price = double.tryParse(priceController.text) ?? 0;
     double pumps = double.tryParse(sprayPumpController.text) ?? 0;
@@ -32,30 +41,23 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
     });
   }
 
-  Future<void> _pickDate() async {
-    DateTime? date = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.light(primary: purple),
-        ),
-        child: child!,
-      ),
-    );
-    if (date != null) setState(() => selectedDate = date);
-  }
-
   @override
   void initState() {
     super.initState();
+
+    // DUMMY DATA: Pre-fill the text fields with dummy values
+    brandController.text = dummyData['brand'];
+    priceController.text = dummyData['price'].toString();
+    sprayPumpController.text = dummyData['sprayPumps'].toString();
+    rateController.text = dummyData['rate'].toString();
+
+    // Calculate initial cost based on dummy data
+    pesticideCost = dummyData['price'] * dummyData['sprayPumps'] * dummyData['rate'];
+
     priceController.addListener(_calculateCost);
     sprayPumpController.addListener(_calculateCost);
     rateController.addListener(_calculateCost);
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,7 +67,12 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
         backgroundColor: purple,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MonitoringCPBPest()),
+            );
+          },
         ),
         centerTitle: true,
         title: const Text(
@@ -81,25 +88,22 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              // ✅ Date Selector (Figma Style)
+              // Date Display (Non-interactive)
               Center(
-                child: GestureDetector(
-                  onTap: _pickDate,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: purple),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.calendar_today, size: 18, color: Colors.black87),
-                        const SizedBox(width: 10),
-                        Text(formatDate(selectedDate),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                      ],
-                    ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: purple),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.calendar_today, size: 18, color: Colors.black87),
+                      const SizedBox(width: 10),
+                      Text(formatDate(DateTime.now()), // Always show current date
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                    ],
                   ),
                 ),
               ),
@@ -125,16 +129,24 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
 
               Row(
                 children: [
-                  Expanded(child: _bottomButton("Previous", purple, () => Navigator.pop(context))),
-                  const SizedBox(width: 10),
-                  Expanded(child: _bottomButton("Draft", Colors.grey.shade600, () {})),
+                  Expanded(child: _bottomButton("Previous", purple, () {
+                    // FIXED: Navigate to MonitoringCPBPest instead of just popping
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MonitoringCPBPest()),
+                    );
+                  })),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _bottomButton("Next", purple, () {
+                      // Return true when Next is pressed to create new box
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const LabourCostPage()), // Fixed class name
-                      );
+                        MaterialPageRoute(builder: (context) => const LabourCostPage()),
+                      ).then((_) {
+                        // When returning from LabourCostPage, pop with true
+                        Navigator.pop(context, true);
+                      });
                     }),
                   ),
                 ],
@@ -187,7 +199,6 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
       ),
     );
   }
-
 
   Widget _bottomButton(String text, Color color, VoidCallback onTap) {
     return SizedBox(
