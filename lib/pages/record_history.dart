@@ -28,9 +28,9 @@ class _RecordHistoryPageState extends State<RecordHistory> {
   int selectedTab = 0;
   String selectedFilter = "Custom";
 
-  DateTime startDate = DateTime.now().subtract(const Duration(days: 7));
-  DateTime endDate = DateTime.now();
-  DateTime month = DateTime.now();
+  DateTime startDate = DateTime(2024, 7, 13);
+  DateTime endDate = DateTime(2024, 7, 2);
+  DateTime month = DateTime(2024, 7, 1);
   DateTime? selectedDay;
 
   DateTime focusedDay = DateTime.now();
@@ -121,17 +121,14 @@ class _RecordHistoryPageState extends State<RecordHistory> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: () {
-                  // Validate dates before navigation
-                  final DateTime start = startDate.isBefore(endDate) ? startDate : endDate;
-                  final DateTime end = startDate.isBefore(endDate) ? endDate : startDate;
-
                   if (selectedTab == 0) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => TableMonitoringCPB(
-                          startDate: start,
-                          endDate: end,
+                          startDate: startDate,
+                          endDate: endDate,
+                          // Remove selectedFarm parameter if TableMonitoringCPB doesn't have it
                         ),
                       ),
                     );
@@ -140,8 +137,9 @@ class _RecordHistoryPageState extends State<RecordHistory> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => TableCocoaYield(
-                          startDate: start,
-                          endDate: end,
+                          startDate: startDate,
+                          endDate: endDate,
+                          // Remove selectedFarm parameter if TableCocoaYield doesn't have it
                         ),
                       ),
                     );

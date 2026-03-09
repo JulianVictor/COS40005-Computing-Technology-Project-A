@@ -10,12 +10,8 @@ class HomeDashboard extends StatelessWidget {
 
   const HomeDashboard({
     super.key,
-    this.farmName = "My Farm",           // Added default value
-    this.latitude = 0.0,                 // Added default value
-    this.longitude = 0.0,                // Added default value
-    this.treeStands = 0,                 // Added default value
-    this.latestEggCount = 0,             // Added default value
-    this.needsTreatment = false,         // Added default value
+    required this.farm,
+    this.onFarmSelected,
   });
 
   final Color purple = const Color(0xFF2D108E);
@@ -93,7 +89,9 @@ class HomeDashboard extends StatelessWidget {
             _mainButton("Monitoring of CPB Pest", () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const MonitoringCPBPest()),
+                MaterialPageRoute(
+                  builder: (context) => MonitoringCPBPest(farm: farm),
+                ),
               );
             }),
             const SizedBox(height: 12),
