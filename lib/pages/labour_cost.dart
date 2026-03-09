@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
-import 'sample_result.dart';
+import 'package:intl/intl.dart';
+import 'scan_sample.dart';
+import 'cost_pesticide.dart';
+import '../models/database_models.dart'; // Add this import
 
 class LabourCostPage extends StatefulWidget {
-  const LabourCostPage({super.key});
+  final Farm farm; // Add farm parameter
+
+  const LabourCostPage({
+    super.key,
+    required this.farm, // Make it required
+  });
 
   @override
   State<LabourCostPage> createState() => _DailyLabourCostPageState();
@@ -11,12 +19,63 @@ class LabourCostPage extends StatefulWidget {
 class _DailyLabourCostPageState extends State<LabourCostPage> {
   final Color purple = const Color(0xFF2D108E);
 
+  DateTime selectedDate = DateTime.now();
   final TextEditingController labourCostController = TextEditingController();
   final TextEditingController farmAreaController = TextEditingController();
   final TextEditingController workCostController = TextEditingController();
   final TextEditingController beansPriceController = TextEditingController();
   final TextEditingController beansProductivityController = TextEditingController();
   final TextEditingController kController = TextEditingController();
+
+  String formatDate(DateTime date) => DateFormat("dd MMM yyyy").format(date);
+
+  // DUMMY DATA - Pre-filled values for testing
+  final Map<String, dynamic> dummyData = {
+    'dailyLabourCost': 200.0,
+    'farmArea': 2.0,
+    'beansPrice': 150.0,
+    'beansProductivity': 160.0,
+    'kValue': 0.8,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+
+    // DUMMY DATA: Pre-fill the text fields with dummy values
+    labourCostController.text = dummyData['dailyLabourCost'].toString();
+    farmAreaController.text = dummyData['farmArea'].toString();
+    beansPriceController.text = dummyData['beansPrice'].toString();
+    beansProductivityController.text = dummyData['beansProductivity'].toString();
+    kController.text = dummyData['kValue'].toString();
+
+    // Calculate initial work cost based on dummy data
+    _calculateWorkCost();
+
+    labourCostController.addListener(_calculateWorkCost);
+    farmAreaController.addListener(_calculateWorkCost);
+  }
+
+  @override
+  void dispose() {
+    labourCostController.removeListener(_calculateWorkCost);
+    farmAreaController.removeListener(_calculateWorkCost);
+    labourCostController.dispose();
+    farmAreaController.dispose();
+    workCostController.dispose();
+    beansPriceController.dispose();
+    beansProductivityController.dispose();
+    kController.dispose();
+    super.dispose();
+  }
+
+  void _calculateWorkCost() {
+    double labour = double.tryParse(labourCostController.text) ?? 0;
+    double area = double.tryParse(farmAreaController.text) ?? 1; // avoid divide by zero
+
+    double result = labour / area;
+    workCostController.text = result.isFinite ? result.toStringAsFixed(2) : "0.00";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,12 +86,28 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
         backgroundColor: purple,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // ONLY CHANGE: Pass farm when navigating back
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CostPesticidePage(farm: widget.farm),
+              ),
+            );
+          },
         ),
         centerTitle: true,
-        title: const Text(
-          "Daily Labour Cost",
-          style: TextStyle(color: Colors.white),
+        title: Column(
+          children: [
+            const Text(
+              "Daily Labour Cost",
+              style: TextStyle(color: Colors.white),
+            ),
+            Text(
+              widget.farm.farmName, // Show farm name
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ],
         ),
       ),
 
@@ -42,6 +117,28 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Date Display (Non-interactive) - Added from Pesticide page
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: purple),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.calendar_today, size: 18, color: Colors.black87),
+                      const SizedBox(width: 10),
+                      Text(formatDate(DateTime.now()), // Always show current date
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
               _label("Daily Labour Cost (RM)"),
               const SizedBox(height: 6),
               _inputField(labourCostController, keyboard: TextInputType.number),
@@ -65,19 +162,28 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
               const SizedBox(height: 30),
 
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _bottomButton("Previous", purple, () => Navigator.pop(context)),
-                  const SizedBox(width: 12),
-                  _bottomButton("Draft", Colors.grey.shade600, () {}),
-                  const SizedBox(width: 12),
-                  _bottomButton("Next", purple, () {
-                    Navigator.push(
+                  Expanded(child: _bottomButton("Previous", purple, () {
+                    // ONLY CHANGE: Pass farm when navigating to Previous
+                    Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const SampleResultPage()),
+                      MaterialPageRoute(
+                        builder: (context) => CostPesticidePage(farm: widget.farm),
+                      ),
                     );
-                  }),
-                  
+                  })),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _bottomButton("Next", purple, () {
+                      // Pass farm to ScanSamplePage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ScanSamplePage(farm: widget.farm),
+                        ),
+                      );
+                    }),
+                  ),
                 ],
               ),
             ],
@@ -117,12 +223,11 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: purple, width: 2), // Remove const here
+          borderSide: BorderSide(color: purple, width: 2),
         ),
       ),
     );
   }
-
 
   Widget _bottomButton(String text, Color color, VoidCallback onTap) {
     return Expanded(
@@ -143,16 +248,6 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
         ),
       ),
     );
-  } // ← This brace was missing
-
-  @override
-  void initState() {
-    super.initState();
-    labourCostController.addListener(_calculateWorkCost);
-    farmAreaController.addListener(_calculateWorkCost);
-
-    // Example default K value (set by admin later)
-    kController.text = "0.8";
   }
 
   Widget _readOnlyField(TextEditingController controller) {
@@ -175,15 +270,4 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
       ),
     );
   }
-
-
-  void _calculateWorkCost() {
-    double labour = double.tryParse(labourCostController.text) ?? 0;
-    double area = double.tryParse(farmAreaController.text) ?? 1; // avoid divide by zero
-
-    double result = labour / area;
-    workCostController.text = result.isFinite ? result.toStringAsFixed(2) : "0.00";
-  }
-
-
-} // ← This brace was missing for the class
+}

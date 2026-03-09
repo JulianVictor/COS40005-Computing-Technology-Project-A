@@ -10,7 +10,7 @@ class HomeDashboard extends StatelessWidget {
 
   const HomeDashboard({
     super.key,
-    required this.farm,
+    required this.farm,           // Make farm required
     this.onFarmSelected,
   });
 
@@ -90,7 +90,7 @@ class HomeDashboard extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => MonitoringCPBPest(farm: farm),
+                  builder: (context) => MonitoringCPBPest(farm: farm), // Pass farm here
                 ),
               );
             }),

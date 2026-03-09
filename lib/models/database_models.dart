@@ -40,8 +40,8 @@ class AppUser {
       farms: List<String>.from(map['farms'] ?? []),
       createdAt: DateTime.parse(map['createdAt'] as String),
       updatedAt: DateTime.parse(map['updatedAt'] as String),
-      lastLoginAt: map['lastLoginAt'] != null 
-          ? DateTime.parse(map['lastLoginAt'] as String) 
+      lastLoginAt: map['lastLoginAt'] != null
+          ? DateTime.parse(map['lastLoginAt'] as String)
           : null,
     );
   }
@@ -63,7 +63,7 @@ class AppUser {
   }
 }
 
-// Farm Model
+// Farm Model - FIXED to match your schema
 class Farm {
   final String farmId;
   final String ownerId;
@@ -77,6 +77,8 @@ class Farm {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isActive;
+  final double? latitude;
+  final double? longitude;
 
   Farm({
     required this.farmId,
@@ -91,39 +93,45 @@ class Farm {
     required this.createdAt,
     required this.updatedAt,
     required this.isActive,
+    this.latitude,
+    this.longitude,
   });
 
   factory Farm.fromMap(Map<String, dynamic> map) {
     return Farm(
-      farmId: map['farmId'] as String,
-      ownerId: map['ownerId'] as String,
-      farmName: map['farmName'] as String,
-      state: map['state'] as String,
-      district: map['district'] as String,
-      village: map['village'] as String,
-      postcode: map['postcode'] as String,
-      areaHectares: (map['areaHectares'] as num).toDouble(),
-      treeCount: map['treeCount'] as int,
-      createdAt: DateTime.parse(map['createdAt'] as String),
-      updatedAt: DateTime.parse(map['updatedAt'] as String),
-      isActive: map['isActive'] as bool,
+      farmId: map['farmid']?.toString() ?? '',
+      ownerId: map['ownerid']?.toString() ?? '',
+      farmName: map['farmname']?.toString() ?? '',
+      state: map['state']?.toString() ?? '',
+      district: map['district']?.toString() ?? '',
+      village: map['village']?.toString() ?? '',
+      postcode: map['postcode']?.toString() ?? '',
+      areaHectares: (map['areahectares'] as num?)?.toDouble() ?? 0.0,
+      treeCount: map['treecount'] as int? ?? 0,
+      createdAt: DateTime.parse(map['createdat'] ?? map['createdAt'] ?? DateTime.now().toIso8601String()),
+      updatedAt: DateTime.parse(map['updatedat'] ?? map['updatedAt'] ?? DateTime.now().toIso8601String()),
+      isActive: map['isactive'] as bool? ?? false,
+      latitude: map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
+      longitude: map['longitude'] != null ? (map['longitude'] as num).toDouble() : null,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'farmId': farmId,
-      'ownerId': ownerId,
-      'farmName': farmName,
+      'farmid': farmId,
+      'ownerid': ownerId,
+      'farmname': farmName,
       'state': state,
       'district': district,
       'village': village,
       'postcode': postcode,
-      'areaHectares': areaHectares,
-      'treeCount': treeCount,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-      'isActive': isActive,
+      'areahectares': areaHectares,
+      'treecount': treeCount,
+      'createdat': createdAt.toIso8601String(),
+      'updatedat': updatedAt.toIso8601String(),
+      'isactive': isActive,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 }
@@ -162,7 +170,7 @@ class Scan {
       eggsDetected: map['eggsDetected'] as int,
       confidenceScore: (map['confidenceScore'] as num).toDouble(),
       scanDate: DateTime.parse(map['scanDate'] as String),
-      gpsLocation: map['gpsLocation'] != null 
+      gpsLocation: map['gpsLocation'] != null
           ? GpsLocation.fromMap(map['gpsLocation'] as Map<String, dynamic>)
           : null,
     );
@@ -617,14 +625,14 @@ class SystemMetrics {
       totalUsers: map['totalUsers'] as int,
       activeUsers: map['activeUsers'] as int,
       totalScans: map['totalScans'] as int,
-      scansByRegion: map['scansByRegion'] != null 
+      scansByRegion: map['scansByRegion'] != null
           ? Map<String, dynamic>.from(map['scansByRegion'] as Map)
           : null,
-      decisions: map['decisions'] != null 
+      decisions: map['decisions'] != null
           ? Map<String, dynamic>.from(map['decisions'] as Map)
           : null,
-      averageConfidence: map['averageConfidence'] != null 
-          ? (map['averageConfidence'] as num).toDouble() 
+      averageConfidence: map['averageConfidence'] != null
+          ? (map['averageConfidence'] as num).toDouble()
           : null,
       falsePositives: map['falsePositives'] as int?,
       falseNegatives: map['falseNegatives'] as int?,
