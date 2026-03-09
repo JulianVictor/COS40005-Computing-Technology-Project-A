@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'labour_cost.dart';
 import 'monitoring_cpb_pest.dart';
-
+import '../models/database_models.dart'; // Add this import
 
 class CostPesticidePage extends StatefulWidget {
-  const CostPesticidePage({super.key});
+  final Farm farm; // Add farm parameter
+
+  const CostPesticidePage({
+    super.key,
+    required this.farm, // Make it required
+  });
 
   @override
   State<CostPesticidePage> createState() => _CostPesticidePageState();
@@ -58,6 +63,19 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
     sprayPumpController.addListener(_calculateCost);
     rateController.addListener(_calculateCost);
   }
+
+  @override
+  void dispose() {
+    priceController.removeListener(_calculateCost);
+    sprayPumpController.removeListener(_calculateCost);
+    rateController.removeListener(_calculateCost);
+    priceController.dispose();
+    brandController.dispose();
+    sprayPumpController.dispose();
+    rateController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,9 +86,12 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
+            // ONLY CHANGE HERE: Pass farm when navigating back
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const MonitoringCPBPest()),
+              MaterialPageRoute(
+                builder: (context) => MonitoringCPBPest(farm: widget.farm),
+              ),
             );
           },
         ),
@@ -130,24 +151,28 @@ class _CostPesticidePageState extends State<CostPesticidePage> {
               Row(
                 children: [
                   Expanded(child: _bottomButton("Previous", purple, () {
-                    // FIXED: Navigate to MonitoringCPBPest instead of just popping
+                    // ONLY CHANGE HERE: Pass farm when navigating to Previous
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const MonitoringCPBPest()),
+                      MaterialPageRoute(
+                        builder: (context) => MonitoringCPBPest(farm: widget.farm),
+                      ),
                     );
                   })),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _bottomButton("Next", purple, () {
-                      // Return true when Next is pressed to create new box
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LabourCostPage()),
-                      ).then((_) {
-                        // When returning from LabourCostPage, pop with true
-                        Navigator.pop(context, true);
-                      });
-                    }),
+                  child: _bottomButton("Next", purple, () {
+                  // Navigate to LabourCostPage with farm
+                  Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                  builder: (context) => LabourCostPage(farm: widget.farm),
+                  ),
+                  ).then((_) {
+                  // When returning from LabourCostPage, pop with true
+                  Navigator.pop(context, true);
+                  });
+                  }),
                   ),
                 ],
               ),

@@ -560,19 +560,25 @@ class _AddFarmPageState extends State<AddFarmPage> {
         return;
       }
 
-      // Prepare farm data according to your database schema
+// Prepare farm data according to your database schema
       final farmData = {
-        'ownerId': currentUser.id,
-        'farmName': _farmNameController.text.trim(),
+        'ownerid': currentUser.id,
+        'farmname': _farmNameController.text.trim(),
         'state': _selectedState!,
         'district': _selectedDistrict!,
         'village': _villageController.text.trim(),
         'postcode': _postcodeController.text.trim(),
-        'areaHectares': double.tryParse(_farmAreaController.text) ?? 0.0,
-        'treeCount': int.tryParse(_treeStandsController.text) ?? 0,
-        'isActive': true,
-        'createdAt': DateTime.now().toIso8601String(),
-        'updatedAt': DateTime.now().toIso8601String(),
+        'areahectares': double.tryParse(_farmAreaController.text) ?? 0.0,  // CHANGE THIS - was 'areaHectares'
+        'treecount': int.tryParse(_treeStandsController.text) ?? 0,        // CHANGE THIS - was 'treeCount'
+        'isactive': true,                                                  // CHANGE THIS - was 'isActive'
+        'createdat': DateTime.now().toIso8601String(),                    // CHANGE THIS - was 'createdAt'
+        'updatedat': DateTime.now().toIso8601String(),                    // CHANGE THIS - was 'updatedAt'
+        'latitude': _latitudeController.text.isNotEmpty
+            ? double.tryParse(_latitudeController.text)
+            : null,
+        'longitude': _longitudeController.text.isNotEmpty
+            ? double.tryParse(_longitudeController.text)
+            : null,
       };
 
       // Save to Supabase and get the response

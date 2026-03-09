@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'scan_sample.dart';
 import 'cost_pesticide.dart';
+import '../models/database_models.dart'; // Add this import
 
 class LabourCostPage extends StatefulWidget {
-  const LabourCostPage({super.key});
+  final Farm farm; // Add farm parameter
+
+  const LabourCostPage({
+    super.key,
+    required this.farm, // Make it required
+  });
 
   @override
   State<LabourCostPage> createState() => _DailyLabourCostPageState();
@@ -50,6 +56,19 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
     farmAreaController.addListener(_calculateWorkCost);
   }
 
+  @override
+  void dispose() {
+    labourCostController.removeListener(_calculateWorkCost);
+    farmAreaController.removeListener(_calculateWorkCost);
+    labourCostController.dispose();
+    farmAreaController.dispose();
+    workCostController.dispose();
+    beansPriceController.dispose();
+    beansProductivityController.dispose();
+    kController.dispose();
+    super.dispose();
+  }
+
   void _calculateWorkCost() {
     double labour = double.tryParse(labourCostController.text) ?? 0;
     double area = double.tryParse(farmAreaController.text) ?? 1; // avoid divide by zero
@@ -68,16 +87,27 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
+            // ONLY CHANGE: Pass farm when navigating back
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const CostPesticidePage()),
+              MaterialPageRoute(
+                builder: (context) => CostPesticidePage(farm: widget.farm),
+              ),
             );
           },
         ),
         centerTitle: true,
-        title: const Text(
-          "Daily Labour Cost",
-          style: TextStyle(color: Colors.white),
+        title: Column(
+          children: [
+            const Text(
+              "Daily Labour Cost",
+              style: TextStyle(color: Colors.white),
+            ),
+            Text(
+              widget.farm.farmName, // Show farm name
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ],
         ),
       ),
 
@@ -134,18 +164,23 @@ class _DailyLabourCostPageState extends State<LabourCostPage> {
               Row(
                 children: [
                   Expanded(child: _bottomButton("Previous", purple, () {
-                    // FIXED: Navigate to CostPesticidePage instead of just popping
+                    // ONLY CHANGE: Pass farm when navigating to Previous
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const CostPesticidePage()),
+                      MaterialPageRoute(
+                        builder: (context) => CostPesticidePage(farm: widget.farm),
+                      ),
                     );
                   })),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _bottomButton("Next", purple, () {
+                      // Pass farm to ScanSamplePage
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ScanSamplePage()),
+                        MaterialPageRoute(
+                          builder: (context) => ScanSamplePage(farm: widget.farm),
+                        ),
                       );
                     }),
                   ),

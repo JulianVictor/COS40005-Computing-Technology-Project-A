@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'scan_sample.dart';
 import 'labour_cost.dart';
+import '../models/database_models.dart'; // Add this import
 
 class SampleResultPage extends StatefulWidget {
-  const SampleResultPage({super.key, required Map<String, Object> scanData});
+  final Map<String, dynamic> scanData; // Add this
+  final Farm farm; // Add farm parameter
+
+  const SampleResultPage({
+    super.key,
+    required this.scanData, // Make it required
+    required this.farm, // Make it required
+  });
 
   @override
   State<SampleResultPage> createState() => _SampleResultPageState();
@@ -59,14 +67,28 @@ class _SampleResultPageState extends State<SampleResultPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
+            // ONLY CHANGE: Pass farm when navigating back
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const ScanSamplePage()),
+              MaterialPageRoute(
+                builder: (context) => ScanSamplePage(
+                  farm: widget.farm,
+                  sampleNumber: 2, // Next sample number
+                ),
+              ),
             );
           },
         ),
         centerTitle: true,
-        title: const Text("Sampling Result", style: TextStyle(color: Colors.white)),
+        title: Column(
+          children: [
+            const Text("Sampling Result", style: TextStyle(color: Colors.white)),
+            Text(
+              widget.farm.farmName, // Show farm name
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ],
+        ),
       ),
 
       body: Padding(
@@ -104,6 +126,40 @@ class _SampleResultPageState extends State<SampleResultPage> {
               ),
 
               const SizedBox(height: 16),
+
+              // Show current sample results from scanData
+              if (widget.scanData.isNotEmpty) ...[
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  color: Colors.blue.shade50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _SectionTitle("📊 Current Sample Results"),
+                        const SizedBox(height: 8),
+                        _ItemText("Total Eggs:", widget.scanData['totalEggs'].toString()),
+                        _ItemText("Average:", widget.scanData['average'].toStringAsFixed(2)),
+                        _ItemText("Decision:", widget.scanData['decision'].toString()),
+                        if (widget.scanData['pods'] != null) ...[
+                          const SizedBox(height: 4),
+                          const Text("Pods:", style: TextStyle(fontWeight: FontWeight.bold)),
+                          ...List.generate(5, (i) {
+                            final pods = widget.scanData['pods'] as List;
+                            return Padding(
+                              padding: const EdgeInsets.only(left: 8, top: 2),
+                              child: Text("Pod ${i + 1}: ${pods[i]} eggs"),
+                            );
+                          }),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Information Card with DUMMY DATA
               Card(
@@ -195,18 +251,27 @@ class _SampleResultPageState extends State<SampleResultPage> {
                 children: [
                   Expanded(
                     child: _bottomButton("Previous", purple, () {
+                      // ONLY CHANGE: Pass farm when navigating to Previous
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => const ScanSamplePage()),
+                        MaterialPageRoute(
+                          builder: (context) => LabourCostPage(farm: widget.farm),
+                        ),
                       );
                     }),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _bottomButton("Add Sample", purple, () {
-                      Navigator.push(
+                      // ONLY CHANGE: Pass farm when adding new sample
+                      Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => const ScanSamplePage()),
+                        MaterialPageRoute(
+                          builder: (context) => ScanSamplePage(
+                            farm: widget.farm,
+                            sampleNumber: 2, // Next sample number
+                          ),
+                        ),
                       );
                     }),
                   ),

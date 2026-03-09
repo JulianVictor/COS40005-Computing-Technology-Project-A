@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'cost_pesticide.dart';
 import 'home_dashboard.dart';
+import '../models/database_models.dart'; // Add this import
 
 class MonitoringCPBPest extends StatefulWidget {
-  const MonitoringCPBPest({super.key});
+  final Farm farm; // Add this parameter
+
+  const MonitoringCPBPest({
+    super.key,
+    required this.farm, // Make it required
+  });
 
   @override
   State<MonitoringCPBPest> createState() => _MonitoringCPBPestState();
@@ -11,7 +17,6 @@ class MonitoringCPBPest extends StatefulWidget {
 
 class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
   final Color purple = const Color(0xFF2D108E);
-  final Farm farm; // Add this
 
   // List to store all monitoring records
   List<Map<String, String>> _monitoringRecords = [
@@ -79,7 +84,7 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const CostPesticidePage(),
+        builder: (context) => CostPesticidePage(farm: widget.farm), // Pass farm here
       ),
     );
 
@@ -101,7 +106,9 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const HomeDashboard()),
+              MaterialPageRoute(
+                builder: (context) => HomeDashboard(farm: widget.farm), // Pass farm back
+              ),
             );
           },
         ),
@@ -113,7 +120,7 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
               style: TextStyle(color: Colors.white),
             ),
             Text(
-              farm.farmName, // Show farm name
+              widget.farm.farmName, // Use widget.farm to access the farm
               style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
           ],
@@ -132,12 +139,13 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
               return Column(
                 children: [
                   _monitoringCard(
+                    farmName: widget.farm.farmName, // Pass farm name
                     date: record['date']!,
                     eil: record['eil']!,
                     sample: record['sample']!,
                     eggs: record['eggs']!,
                     decision: record['decision']!,
-                    onDelete: () => _deleteMonitoringCard(index), onEdit: () {  },
+                    onDelete: () => _deleteMonitoringCard(index),
                   ),
                   if (index < _monitoringRecords.length - 1)
                     const SizedBox(height: 16),
@@ -177,7 +185,7 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
     required String sample,
     required String eggs,
     required String decision,
-    required VoidCallback onDelete, required Null Function() onEdit,
+    required VoidCallback onDelete,
   }) {
     return Card(
       elevation: 5,
@@ -199,6 +207,8 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  Text("Farm: $farmName"), // Show farm name
+                  const SizedBox(height: 4),
                   Text("EIL: $eil"),
                   const SizedBox(height: 4),
                   Text("Total Sample: $sample"),
@@ -209,7 +219,7 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
                 ],
               ),
             ),
-            // Delete button only - changed to filled bin icon
+            // Delete button only
             IconButton(
               onPressed: onDelete,
               icon: const Icon(Icons.delete, color: Colors.red),

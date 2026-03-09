@@ -8,10 +8,17 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
 import 'sample_result.dart';
+import '../models/database_models.dart'; // Add this import
 
 class ScanSamplePage extends StatefulWidget {
   final int sampleNumber;
-  const ScanSamplePage({super.key, this.sampleNumber = 1});
+  final Farm farm; // Add farm parameter
+
+  const ScanSamplePage({
+    super.key,
+    this.sampleNumber = 1,
+    required this.farm, // Make it required
+  });
 
   @override
   State<ScanSamplePage> createState() => _ScanSamplePageState();
@@ -252,14 +259,25 @@ class _ScanSamplePageState extends State<ScanSamplePage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
+            // ONLY CHANGE: Pass farm when navigating back
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const LabourCostPage()),
+              MaterialPageRoute(
+                builder: (context) => LabourCostPage(farm: widget.farm),
+              ),
             );
           },
         ),
         centerTitle: true,
-        title: const Text("Sampling Result", style: TextStyle(color: Colors.white)),
+        title: Column(
+          children: [
+            const Text("Sampling Result", style: TextStyle(color: Colors.white)),
+            Text(
+              widget.farm.farmName, // Show farm name
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -415,17 +433,22 @@ class _ScanSamplePageState extends State<ScanSamplePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _bottomButton("Previous", purple, () {
+                  // ONLY CHANGE: Pass farm when navigating to Previous
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const LabourCostPage()),
+                    MaterialPageRoute(
+                      builder: (context) => LabourCostPage(farm: widget.farm),
+                    ),
                   );
                 }),
                 const SizedBox(width: 10),
                 _bottomButton("Submit", purple, () {
+                  // Pass farm to SampleResultPage
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                       builder: (context) => SampleResultPage(
+                        farm: widget.farm, // Pass farm
                         scanData: {
                           "totalEggs": cumulative > 0 ? cumulative : 0,
                           "average": cumulative > 0 ? average : 0.0,
