@@ -1,55 +1,114 @@
-
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'cocoa_yield_input.dart';
-import '../models/yield_record.dart';
+import '../models/yield_record.dart' as yield_model;
+import '../services/database_service.dart';
+import '../models/database_models.dart';
 
 class CocoaYieldManagement extends StatefulWidget {
-  const CocoaYieldManagement({super.key});
+  final Farm? selectedFarm;
+
+  const CocoaYieldManagement({super.key, this.selectedFarm});
 
   @override
   State<CocoaYieldManagement> createState() => _CocoaYieldManagementState();
 }
 
 class _CocoaYieldManagementState extends State<CocoaYieldManagement> {
-  // Sample data
-  List<YieldRecord> records = [
-    YieldRecord(
-      date: '2025-10-28',
-      beanType: 'Dry',
-      grade: 'A',
-      salesRevenue: '20',
-      salesIncome: '2000',
-      remarks: 'Sample record',
-    ),
-    YieldRecord(
-      date: '2025-10-25',
-      beanType: 'Wet',
-      grade: 'B',
-      salesRevenue: '15',
-      salesIncome: '1500',
-      remarks: 'Previous harvest',
-    ),
-  ];
+  final DatabaseService _dbService = DatabaseService();
+  List<yield_model.YieldRecord> records = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecords();
+  }
+
+  Future<void> _loadRecords() async {
+    final String? currentUserId = await _getCurrentUserId();
+    if (currentUserId != null) {
+      // Use the selected farm ID if available, otherwise get all farms
+      final yieldRecords = await _dbService.getYieldRecords(
+        currentUserId,
+        farmId: widget.selectedFarm?.farmId,
+      );
+      setState(() {
+        records = yieldRecords;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<String?> _getCurrentUserId() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      return user?.id;
+    } catch (e) {
+      print('Error getting current user: $e');
+      return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Cocoa Yield Management',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Cocoa Yield Management',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (widget.selectedFarm != null)
+              Text(
+                widget.selectedFarm!.farmName,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+          ],
         ),
         backgroundColor: const Color(0xFF2D108E),
         foregroundColor: Colors.white,
       ),
-      body: records.isEmpty
+      body: _isLoading
           ? const Center(
-        child: Text(
-          'No records yet.\nTap the + button to add one.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16, color: Colors.grey),
+        child: CircularProgressIndicator(),
+      )
+          : records.isEmpty
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.agriculture_outlined,
+              size: 64,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              widget.selectedFarm != null
+                  ? 'No yield records for ${widget.selectedFarm!.farmName}'
+                  : 'No yield records yet',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Tap the + button to add one.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
         ),
       )
           : ListView.builder(
@@ -70,7 +129,7 @@ class _CocoaYieldManagementState extends State<CocoaYieldManagement> {
     );
   }
 
-  Widget _buildRecordCard(YieldRecord record, int index) {
+  Widget _buildRecordCard(yield_model.YieldRecord record, int index) {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 16.0),
@@ -79,24 +138,41 @@ class _CocoaYieldManagementState extends State<CocoaYieldManagement> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Farm Name (if we have the farm data)
+            if (widget.selectedFarm != null)
+              _buildInfoRow('Farm', widget.selectedFarm!.farmName),
+            if (widget.selectedFarm == null)
+              _buildInfoRow('Farm ID', record.farmId),
+            const SizedBox(height: 8),
+
             // Date
-            _buildInfoRow('Date', record.date),
+            _buildInfoRow('Date',
+                '${record.harvestDate.year}-${record.harvestDate.month}-${record.harvestDate.day}'),
             const SizedBox(height: 8),
 
             // Cocoa Bean Type
-            _buildInfoRow('Cocoa Bean Type', record.beanType),
+            _buildInfoRow('Cocoa Bean Type', record.beanType.toUpperCase()),
             const SizedBox(height: 8),
 
             // Grade
-            _buildInfoRow('Grade', record.grade),
+            _buildInfoRow('Grade', 'Grade ${record.beanGrade}'),
             const SizedBox(height: 8),
 
-            // Sales Revenue
-            _buildInfoRow('Sales Revenue (kg)', record.salesRevenue),
+            // Quantity (kg)
+            _buildInfoRow('Quantity (kg)', record.quantityKg.toStringAsFixed(2)),
             const SizedBox(height: 8),
 
-            // Sales Income
-            _buildInfoRow('Sales Income (RM)', record.salesIncome),
+            // Sales Income (RM) - only show if exists
+            if (record.salesRevenue != null) ...[
+              _buildInfoRow('Sales Income (RM)', record.salesRevenue!.toStringAsFixed(2)),
+              const SizedBox(height: 8),
+            ],
+
+            // Remarks - only show if exists
+            if (record.remarks != null && record.remarks!.isNotEmpty) ...[
+              _buildInfoRow('Remarks', record.remarks!),
+              const SizedBox(height: 8),
+            ],
 
             // Edit and Delete buttons
             Align(
@@ -152,33 +228,30 @@ class _CocoaYieldManagementState extends State<CocoaYieldManagement> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const CocoaYieldInput(),
+        builder: (context) => CocoaYieldInput(selectedFarm: widget.selectedFarm),
       ),
     );
 
-    if (result != null && result is YieldRecord) {
-      setState(() {
-        records.add(result);
-      });
+    if (result != null && result is yield_model.YieldRecord) {
+      await _loadRecords();
     }
   }
 
-  void _editRecord(YieldRecord record, int index) async {
+  void _editRecord(yield_model.YieldRecord record, int index) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CocoaYieldInput(record: record),
+        builder: (context) => CocoaYieldInput(record: record, selectedFarm: widget.selectedFarm),
       ),
     );
 
-    if (result != null && result is YieldRecord) {
-      setState(() {
-        records[index] = result;
-      });
+    if (result != null && result is yield_model.YieldRecord) {
+      await _loadRecords();
     }
   }
 
-  void _deleteRecord(int index) {
+  void _deleteRecord(int index) async {
+    final record = records[index];
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -190,11 +263,19 @@ class _CocoaYieldManagementState extends State<CocoaYieldManagement> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                records.removeAt(index);
-              });
-              Navigator.pop(context);
+            onPressed: () async {
+              try {
+                if (record.recordId != null) {
+                  await _dbService.deleteYieldRecord(record.recordId!);
+                }
+                await _loadRecords();
+                Navigator.pop(context);
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error deleting record: $e')),
+                );
+              }
             },
             child: const Text(
               'Delete',

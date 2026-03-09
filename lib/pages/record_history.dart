@@ -4,12 +4,18 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter/cupertino.dart';
 import 'table_monitoring_cpb.dart';
 import 'table_cocoa_yield.dart';
-import 'home_dashboard.dart';
+import '../models/database_models.dart'; // Add this import
 
+// Add the FilterMode enum here
 enum FilterMode { day, week, month, year, custom }
 
 class RecordHistory extends StatefulWidget {
-  const RecordHistory({super.key});
+  final Farm selectedFarm; // Add this
+
+  const RecordHistory({
+    super.key,
+    required this.selectedFarm, // Add this
+  });
 
   @override
   State<RecordHistory> createState() => _RecordHistoryPageState();
@@ -33,7 +39,6 @@ class _RecordHistoryPageState extends State<RecordHistory> {
 
   final DateFormat formatter = DateFormat("d MMMM yyyy");
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,9 +52,17 @@ class _RecordHistoryPageState extends State<RecordHistory> {
             Navigator.pop(context);
           },
         ),
-        title: const Text(
-          "Record History",
-          style: TextStyle(color: Colors.white),
+        title: Column(
+          children: [
+            const Text(
+              "Record History",
+              style: TextStyle(color: Colors.white),
+            ),
+            Text(
+              widget.selectedFarm.farmName, // Show farm name
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ],
         ),
       ),
 
@@ -222,7 +235,6 @@ class _RecordHistoryPageState extends State<RecordHistory> {
     );
   }
 
-
   Widget _calendar() {
     return TableCalendar(
       firstDay: DateTime(2000),
@@ -273,7 +285,6 @@ class _RecordHistoryPageState extends State<RecordHistory> {
         });
       },
 
-
       selectedDayPredicate: (day) {
         if (selectedFilter == "Month" || selectedFilter == "Year") {
           return false; // no highlight
@@ -294,7 +305,6 @@ class _RecordHistoryPageState extends State<RecordHistory> {
 
         return false;
       },
-
 
       calendarStyle: CalendarStyle(
         todayDecoration: BoxDecoration(
@@ -468,12 +478,4 @@ class _RecordHistoryPageState extends State<RecordHistory> {
       },
     );
   }
-
-
-
-
-
-
-
-
 }

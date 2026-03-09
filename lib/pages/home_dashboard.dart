@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'monitoring_cpb_pest.dart';
 import 'cocoa_yield_management.dart';
 import 'record_history.dart';
+import '../models/database_models.dart';
 
 class HomeDashboard extends StatelessWidget {
-  final String farmName;
-  final double latitude;
-  final double longitude;
-  final int treeStands;
-  final int latestEggCount;
-  final bool needsTreatment;
+  final Farm farm;
+  final Function(Farm)? onFarmSelected;
 
   const HomeDashboard({
     super.key,
@@ -35,9 +32,17 @@ class HomeDashboard extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          "DMCOCOA",
-          style: TextStyle(color: Colors.white),
+        title: Column(
+          children: [
+            const Text(
+              "DMCOCOA",
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            Text(
+              farm.farmName,
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ],
         ),
       ),
 
@@ -69,14 +74,16 @@ class HomeDashboard extends StatelessWidget {
                   )
                 ],
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Date     : 01.09.2021"),
-                  SizedBox(height: 6),
-                  Text("Decision : TREAT"),
-                  SizedBox(height: 6),
-                  Text("Remark  : Reuse DMCOCOA on 11.09.2021"),
+                  Text("Farm     : ${farm.farmName}"),
+                  const SizedBox(height: 6),
+                  Text("Location : ${farm.district}, ${farm.state}"),
+                  const SizedBox(height: 6),
+                  Text("Area     : ${farm.areaHectares} hectares"),
+                  const SizedBox(height: 6),
+                  Text("Tree Stands : ${farm.treeCount}"),
                 ],
               ),
             ),
@@ -94,7 +101,9 @@ class HomeDashboard extends StatelessWidget {
             _mainButton("Cocoa Yield Management", () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const CocoaYieldManagement()),
+                MaterialPageRoute(
+                  builder: (context) => CocoaYieldManagement(selectedFarm: farm),
+                ),
               );
             }),
             const SizedBox(height: 12),
@@ -102,7 +111,9 @@ class HomeDashboard extends StatelessWidget {
             _mainButton("Record History", () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const RecordHistory()),
+                MaterialPageRoute(
+                  builder: (context) => RecordHistory(selectedFarm: farm),
+                ),
               );
             }),
           ],

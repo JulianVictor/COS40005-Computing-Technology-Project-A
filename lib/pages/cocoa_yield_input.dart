@@ -1,42 +1,148 @@
+// cocoa_yield_input.dart
 import 'package:flutter/material.dart';
-import '../models/yield_record.dart';
+import '../services/database_service.dart';
+import '../models/yield_record.dart' as yield_model;
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/database_models.dart';
 
 class CocoaYieldInput extends StatefulWidget {
-  final YieldRecord? record;
+  final yield_model.YieldRecord? record;
+  final Farm? selectedFarm;
 
-  const CocoaYieldInput({super.key, this.record});
+  const CocoaYieldInput({super.key, this.record, this.selectedFarm});
 
   @override
   State<CocoaYieldInput> createState() => _CocoaYieldInputState();
 }
 
 class _CocoaYieldInputState extends State<CocoaYieldInput> {
-  final TextEditingController _dateController = TextEditingController();
-  String? _selectedBeanType;
-  String? _selectedGrade;
+  final _formKey = GlobalKey<FormState>();
+  final DatabaseService _dbService = DatabaseService();
+
+  // Form fields
+  String? _selectedFarmId;
+  DateTime _selectedDate = DateTime.now();
+  String _selectedBeanType = 'dry';
+  String _selectedGrade = 'A';
+  final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _revenueController = TextEditingController();
-  final TextEditingController _incomeController = TextEditingController();
   final TextEditingController _remarksController = TextEditingController();
 
-  // Dropdown options
-  final List<String> _beanTypes = ['Wet', 'Dry'];
-  final List<String> _grades = ['A', 'B', 'C'];
+  List<Map<String, dynamic>> _farms = [];
+  bool _isLoadingFarms = true;
 
   @override
   void initState() {
     super.initState();
-    // If editing existing record, populate fields
+    _loadFarms();
+    _initializeForm();
+  }
+
+  void _initializeForm() {
     if (widget.record != null) {
-      _dateController.text = widget.record!.date;
+      // Editing existing record
+      _selectedFarmId = widget.record!.farmId;
+      _selectedDate = widget.record!.harvestDate;
       _selectedBeanType = widget.record!.beanType;
-      _selectedGrade = widget.record!.grade;
-      _revenueController.text = widget.record!.salesRevenue;
-      _incomeController.text = widget.record!.salesIncome;
-      _remarksController.text = widget.record!.remarks;
+      _selectedGrade = widget.record!.beanGrade;
+      _quantityController.text = widget.record!.quantityKg.toString();
+      _revenueController.text = widget.record!.salesRevenue?.toString() ?? '';
+      _remarksController.text = widget.record!.remarks ?? '';
+    } else if (widget.selectedFarm != null) {
+      // Adding new record with pre-selected farm
+      _selectedFarmId = widget.selectedFarm!.farmId;
+    }
+  }
+
+  Future<void> _loadFarms() async {
+    final String? currentUserId = await _getCurrentUserId();
+    if (currentUserId != null) {
+      final farms = await _dbService.getUserFarmsForDropdown(currentUserId);
+      setState(() {
+        _farms = farms;
+        _isLoadingFarms = false;
+
+        // Auto-select logic
+        if (_selectedFarmId == null) {
+          if (widget.selectedFarm != null) {
+            // Use the farm passed from dashboard
+            _selectedFarmId = widget.selectedFarm!.farmId;
+          } else if (_farms.isNotEmpty) {
+            // Fallback: select first farm
+            _selectedFarmId = _farms.first['farmId'];
+          }
+        }
+      });
     } else {
-      // Set default date to today for new records
-      final now = DateTime.now();
-      _dateController.text = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      setState(() {
+        _isLoadingFarms = false;
+      });
+    }
+  }
+
+  Future<String?> _getCurrentUserId() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      return user?.id;
+    } catch (e) {
+      print('Error getting current user: $e');
+      return null;
+    }
+  }
+
+  Future<void> _saveRecord() async {
+    if (_formKey.currentState!.validate() && _selectedFarmId != null) {
+      final String? currentUserId = await _getCurrentUserId();
+
+      if (currentUserId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
+        return;
+      }
+
+      final record = yield_model.YieldRecord(
+        recordId: widget.record?.recordId,
+        farmerId: currentUserId,
+        farmId: _selectedFarmId!,
+        harvestDate: _selectedDate,
+        beanType: _selectedBeanType,
+        beanGrade: _selectedGrade,
+        quantityKg: double.parse(_quantityController.text),
+        salesRevenue: _revenueController.text.isNotEmpty
+            ? double.parse(_revenueController.text)
+            : null,
+        remarks: _remarksController.text.isNotEmpty ? _remarksController.text : null,
+      );
+
+      try {
+        if (widget.record == null) {
+          await _dbService.createYieldRecord(record);
+        } else {
+          await _dbService.updateYieldRecord(record);
+        }
+
+        Navigator.pop(context, record);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving record: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
     }
   }
 
@@ -44,298 +150,161 @@ class _CocoaYieldInputState extends State<CocoaYieldInput> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Cocoa Yield Management',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: Text(widget.record == null ? 'Add Yield Record' : 'Edit Yield Record'),
         backgroundColor: const Color(0xFF2D108E),
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _saveRecord,
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
+      body: _isLoadingFarms
+          ? const Center(
+        child: CircularProgressIndicator(),
+      )
+          : Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Date Picker
-            _buildDateField(),
-            const SizedBox(height: 20),
-
-            // Cocoa Bean Type Dropdown
-            _buildDropdownField(
-              label: 'Cocoa Bean Type',
-              value: _selectedBeanType,
-              items: _beanTypes,
-              onChanged: (value) {
-                setState(() {
-                  _selectedBeanType = value;
-                });
-              },
-              hint: 'Select bean type',
-            ),
-            const SizedBox(height: 16),
-
-            // Grade Dropdown
-            _buildDropdownField(
-              label: 'Grade',
-              value: _selectedGrade,
-              items: _grades,
-              onChanged: (value) {
-                setState(() {
-                  _selectedGrade = value;
-                });
-              },
-              hint: 'Select grade',
-            ),
-            const SizedBox(height: 16),
-
-            // Sales Revenue (kg)
-            _buildNumberField(
-              label: 'Sales Revenue (kg)',
-              controller: _revenueController,
-              hint: '0',
-            ),
-            const SizedBox(height: 16),
-
-            // Sales Income (RM)
-            _buildNumberField(
-              label: 'Sales Income (RM)',
-              controller: _incomeController,
-              hint: '0',
-            ),
-            const SizedBox(height: 16),
-
-            // Remarks
-            _buildRemarksField(),
-            const SizedBox(height: 30),
-
-            // Save Button
-            _buildSaveButton(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateField() {
-    return GestureDetector(
-      onTap: _selectDate,
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade400),
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.calendar_today, color: Color(0xFF2D108E)),
-            const SizedBox(width: 12),
-            Text(
-              _dateController.text.isEmpty ? 'Select Date' : _dateController.text,
-              style: TextStyle(
-                color: _dateController.text.isEmpty ? Colors.grey : Colors.black,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              // Farm Selection Dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedFarmId,
+                decoration: const InputDecoration(labelText: 'Farm'),
+                items: _farms.map<DropdownMenuItem<String>>((farm) {
+                  return DropdownMenuItem<String>(
+                    value: farm['farmId'] as String,
+                    child: Text(farm['farmName'] as String),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedFarmId = value;
+                  });
+                },
+                validator: (value) {
+                  if (value == null) return 'Please select a farm';
+                  return null;
+                },
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+              const SizedBox(height: 16),
 
-  Widget _buildDropdownField({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required Function(String?) onChanged,
-    required String hint,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-            color: Colors.black87,
+              // Show selected farm info if coming from dashboard
+              if (widget.selectedFarm != null && _selectedFarmId == widget.selectedFarm!.farmId)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2D108E).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Farm: ${widget.selectedFarm!.farmName} (${widget.selectedFarm!.district}, ${widget.selectedFarm!.state})',
+                    style: const TextStyle(
+                      color: Color(0xFF2D108E),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              if (widget.selectedFarm != null && _selectedFarmId == widget.selectedFarm!.farmId)
+                const SizedBox(height: 16),
+
+              // Date Picker
+              ListTile(
+                title: const Text('Harvest Date'),
+                subtitle: Text('${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}'),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: _selectDate,
+              ),
+              const SizedBox(height: 16),
+
+              // Bean Type Dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedBeanType,
+                decoration: const InputDecoration(labelText: 'Bean Type'),
+                items: ['wet', 'dry'].map<DropdownMenuItem<String>>((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type == 'wet' ? 'Wet' : 'Dry'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedBeanType = value!;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Grade Dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedGrade,
+                decoration: const InputDecoration(labelText: 'Grade'),
+                items: ['A', 'B', 'C'].map<DropdownMenuItem<String>>((grade) {
+                  return DropdownMenuItem<String>(
+                    value: grade,
+                    child: Text('Grade $grade'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedGrade = value!;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Quantity Input
+              TextFormField(
+                controller: _quantityController,
+                decoration: const InputDecoration(
+                  labelText: 'Quantity (kg)',
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter quantity';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Revenue Input (optional)
+              TextFormField(
+                controller: _revenueController,
+                decoration: const InputDecoration(
+                  labelText: 'Sales Revenue (RM) - Optional',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+
+              // Remarks Input (optional)
+              TextFormField(
+                controller: _remarksController,
+                decoration: const InputDecoration(
+                  labelText: 'Remarks - Optional',
+                ),
+                maxLines: 3,
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade400),
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: DropdownButton<String>(
-            value: value,
-            isExpanded: true,
-            underline: const SizedBox(),
-            hint: Text(hint),
-            items: items.map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: onChanged,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNumberField({
-    required String label,
-    required TextEditingController controller,
-    required String hint,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            hintText: hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Color(0xFF2D108E)),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRemarksField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Remarks',
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: _remarksController,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Enter any remarks...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Color(0xFF2D108E)),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSaveButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _saveRecord,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2D108E),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-        ),
-        child: const Text(
-          'Save Record',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-
-    if (picked != null) {
-      setState(() {
-        _dateController.text = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
-      });
-    }
-  }
-
-  void _saveRecord() {
-    // Validation
-    if (_dateController.text.isEmpty) {
-      _showError('Please select a date');
-      return;
-    }
-    if (_selectedBeanType == null) {
-      _showError('Please select cocoa bean type');
-      return;
-    }
-    if (_selectedGrade == null) {
-      _showError('Please select grade');
-      return;
-    }
-    if (_revenueController.text.isEmpty) {
-      _showError('Please enter sales revenue');
-      return;
-    }
-    if (_incomeController.text.isEmpty) {
-      _showError('Please enter sales income');
-      return;
-    }
-
-    final record = YieldRecord(
-      date: _dateController.text,
-      beanType: _selectedBeanType!,
-      grade: _selectedGrade!,
-      salesRevenue: _revenueController.text,
-      salesIncome: _incomeController.text,
-      remarks: _remarksController.text,
-    );
-
-    Navigator.pop(context, record);
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
       ),
     );
   }
 
   @override
   void dispose() {
-    _dateController.dispose();
+    _quantityController.dispose();
     _revenueController.dispose();
-    _incomeController.dispose();
     _remarksController.dispose();
     super.dispose();
   }

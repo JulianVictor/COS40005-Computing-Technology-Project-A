@@ -11,6 +11,7 @@ class MonitoringCPBPest extends StatefulWidget {
 
 class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
   final Color purple = const Color(0xFF2D108E);
+  final Farm farm; // Add this
 
   // List to store all monitoring records
   List<Map<String, String>> _monitoringRecords = [
@@ -105,9 +106,17 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
           },
         ),
         centerTitle: true,
-        title: const Text(
-          "Monitoring CPB Pest",
-          style: TextStyle(color: Colors.white),
+        title: Column(
+          children: [
+            const Text(
+              "Monitoring CPB Pest",
+              style: TextStyle(color: Colors.white),
+            ),
+            Text(
+              farm.farmName, // Show farm name
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ],
         ),
       ),
 
@@ -162,6 +171,7 @@ class _MonitoringCPBPestState extends State<MonitoringCPBPest> {
   }
 
   Widget _monitoringCard({
+    required String farmName, // Add farmName parameter
     required String date,
     required String eil,
     required String sample,
